@@ -336,12 +336,12 @@ docker compose up -d
 
 # Opsi B: docker run langsung
 docker build -t plts-kalkulator .
-docker run -d -p 8080:80 plts-kalkulator
+docker run -d -p 8005:80 plts-kalkulator
 ```
 
-Setelah berjalan, aplikasi dapat diakses melalui `http://<host>:8080/` (atau domain dengan HTTPS otomatis).
+Setelah berjalan, aplikasi dapat diakses melalui `http://<host>:8005/` (atau domain dengan HTTPS otomatis).
 
 ### 14.5 Catatan Konfigurasi
-- **Port default:** container mendengar di port `80` (internal); dipetakan ke port eksternal (contoh `8080`) agar tidak bentrok.
+- **Port default:** container mendengar di port `80` (internal); dipetakan ke port eksternal **`8005`** agar tidak bentrok.
 - **Domain & HTTPS:** jika pengguna memiliki domain, cukup tulis nama domain di Caddyfile dan Caddy akan mengurus sertifikat HTTPS otomatis.
 - **Dockerfile ringan:** gunakan base image `caddy:alpine` dan hanya menyalin file statis + Caddyfile — tanpa dependency/build tool tambahan, karena tidak ada proses build frontend.
