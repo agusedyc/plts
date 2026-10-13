@@ -59,11 +59,15 @@ export function pltsApp() {
     this.hasResults = true;
 
     // Persist history + preferences
+    await this.saveHistory(sizing);
+    await this.savePreferences();
+  },
+
+  async saveHistory(sizing) {
     await storage.saveCalculation({
-      input: { ...this.inputs, energyKwh: this.inputs.energyKwh },
+      input: { ...this.inputs },
       output: { ...sizing },
     });
-    await storage.savePreferences({ ...this.inputs });
     await this.loadHistory();
   },
 
@@ -88,9 +92,16 @@ export function pltsApp() {
     this.history = await storage.getHistory();
   },
 
+  async restoreHistory(id) {
+    const item = this.history.find((h) => h.id === id);
+    if (item) {
+      await this.restoreInput(item);
+    }
+  },
+
   async restoreInput(item) {
     this.inputs = { ...this.inputs, ...item.input };
-    this.hitung();
+    await this.hitung();
   },
 
   async removeHistory(id) {
