@@ -1,0 +1,7 @@
+services:
+  plts:
+    build: .
+    container_name: plts-kalkulator
+    ports:
+      - "8005:80"
+    restart: unless-stopped
