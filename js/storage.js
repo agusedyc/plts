@@ -58,38 +58,35 @@ export function createIndexedDbAdapter(dbName = 'plts-kalkulator', version = 1) 
     });
   }
 
-  async function withStore(store, mode, fn) {
+  async function withStore(store, mode, action) {
     const db = await open();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(store, mode);
       const os = tx.objectStore(store);
-      const result = fn(os);
-      tx.oncomplete = () => { db.close(); resolve(result); };
+      let req;
+      try {
+        req = action(os);
+      } catch (e) {
+        db.close();
+        reject(e);
+        return;
+      }
+      tx.oncomplete = () => { db.close(); resolve(req && req.result); };
       tx.onerror = () => { db.close(); reject(tx.error); };
+      tx.onabort = () => { db.close(); reject(tx.error); };
     });
   }
 
   return {
     async getAll(store) {
-      return withStore(store, 'readonly', (os) => {
-        const req = os.getAll();
-        req.onerror = () => {};
-        return req;
-      });
+      return withStore(store, 'readonly', (os) => os.getAll());
     },
     async put(store, value) {
-      return withStore(store, 'readwrite', (os) => {
-        const req = store === 'preferences' ? os.put(value, 'prefs') : os.put(value);
-        req.onerror = () => {};
-        return req;
-      });
+      return withStore(store, 'readwrite', (os) =>
+        store === 'preferences' ? os.put(value, 'prefs') : os.put(value));
     },
     async delete(store, id) {
-      return withStore(store, 'readwrite', (os) => {
-        const req = os.delete(id);
-        req.onerror = () => {};
-        return req;
-      });
+      return withStore(store, 'readwrite', (os) => os.delete(id));
     },
   };
 }

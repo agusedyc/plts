@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 
 test('worked example from PRD section 10', () => {
   const r = calculateSizing({
-    peakPower: 5500, energyKwh: 30, sph: 4, systemVoltage: 48,
+    peakPower: 5500, energyWh: 30000, sph: 4, systemVoltage: 48,
     dod: 0.8, autonomyDays: 1, wpPerPanel: 550,
     safetyFactor: 1.2, lossFactor: 1.3,
   });
@@ -26,7 +26,7 @@ test('helpers return raw values', () => {
 
 test('defaults are applied when optional params omitted', () => {
   const r = calculateSizing({
-    peakPower: 5500, energyKwh: 30, sph: 4, systemVoltage: 48, dod: 0.8,
+    peakPower: 5500, energyWh: 30000, sph: 4, systemVoltage: 48, dod: 0.8,
   });
   assert.equal(r.panelCount, 18);        // wpPerPanel defaults to 550
   assert.equal(r.inverterWatts, 6600);   // safetyFactor defaults 1.2

@@ -18,8 +18,7 @@ export function sccAmps(panelWpTotal, systemVoltage) {
 export function panelCount(panelWpTotal, wpPerPanel = DEFAULT_WP_PER_PANEL) {
   return Math.ceil(panelWpTotal / wpPerPanel);
 }
-export function calculateSizing({ peakPower, energyKwh, sph, systemVoltage, dod, autonomyDays, wpPerPanel, safetyFactor, lossFactor }) {
-  const energyWh = energyKwh * 1000;
+export function calculateSizing({ peakPower, energyWh, sph, systemVoltage, dod, autonomyDays, wpPerPanel, safetyFactor, lossFactor }) {
   const rawBattery = batteryAh(energyWh, systemVoltage, dod, autonomyDays);
   return {
     inverterWatts: Math.ceil(inverterWatts(peakPower, safetyFactor)),
