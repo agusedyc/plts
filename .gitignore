@@ -1,7 +1,5 @@
 # Dependencies (jika suatu saat memakai npm)
 node_modules/
-package-lock.json
-package.json
 
 # Build output
 dist/
