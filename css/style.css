@@ -1,0 +1,34 @@
+/* Mobile-first, layered on top of Bootstrap 5 */
+
+[x-cloak] {
+  display: none !important;
+}
+
+body {
+  background-color: #f8f9fa;
+}
+
+.result-card {
+  height: 100%;
+  border-width: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.result-card .display-6 {
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+}
+
+/* Subtle fade-in used by Alpine x-transition on the results section */
+[data-transition-fade].x-transition {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.card-header {
+  font-weight: 600;
+}
+
+@media (max-width: 575.98px) {
+  .result-card .display-6 {
+    font-size: 1.5rem;
+  }
+}
