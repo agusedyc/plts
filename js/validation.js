@@ -24,9 +24,14 @@ export function validateInput(input) {
 
   // Clamp SPH to [1,10]
   let sph = Number(input.sph);
-  if (!Number.isNaN(sph) && sph > 10) {
-    sph = 10;
-    warnings.sph = 'Jam efektif matahari dibatasi hingga 10 jam.';
+  if (!Number.isNaN(sph)) {
+    if (sph > 10) {
+      sph = 10;
+      warnings.sph = 'Jam efektif matahari dibatasi hingga 10 jam.';
+    } else if (sph < 1) {
+      sph = 1;
+      warnings.sph = 'Jam efektif matahari minimal 1 jam.';
+    }
   }
 
   // Autonomy days: default 1, clamp to [1,5]

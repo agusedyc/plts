@@ -4,7 +4,7 @@ import { createStorage, getDefaultAdapter } from './storage.js';
 
 const storage = createStorage(getDefaultAdapter());
 
-const DOD_DEFAULTS = { lithium: 0.8, vrla: 0.5 };
+const DOD_DEFAULTS = { lithium: 80, vrla: 50 };
 
 export function pltsApp() {
   return {

@@ -25,6 +25,13 @@ test('SPH above 10 is clamped with a warning, still valid', () => {
   assert.equal(r.normalized.sph, 10);
 });
 
+test('SPH below 1 is clamped to 1 with a warning, still valid', () => {
+  const r = validateInput({ peakPower: 5500, energyKwh: 30, sph: 0.5, systemVoltage: 48, dod: 0.8 });
+  assert.equal(r.errors.sph, undefined);
+  assert.ok(r.warnings.sph);
+  assert.equal(r.normalized.sph, 1);
+});
+
 test('empty autonomyDays defaults to 1', () => {
   const r = validateInput({ peakPower: 5500, energyKwh: 30, sph: 4, systemVoltage: 48, dod: 0.8, autonomyDays: '' });
   assert.equal(r.normalized.autonomyDays, 1);
