@@ -658,64 +658,10 @@
                 </div>
               </div>
 
-              <!-- DIAGRAM DINAMIS RANGKAIAN PANEL -->
-              <div class="mt-3 border-top pt-2">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <strong class="small text-dark" style="font-size: 0.78rem;">📐 Diagram Visual Rangkaian:</strong>
-                  <span class="badge bg-info text-dark" style="font-size: 0.7rem;" x-text="(results?.stringConfig?.series || 0) + ' Seri · ' + (results?.stringConfig?.parallel || 0) + ' Paralel'"></span>
-                </div>
-                
-                <div class="pv-diagram-container">
-                  <div class="pv-diagram-scroll">
-                    <template x-for="p in stringParallelArray" :key="p">
-                      <div class="pv-string-block">
-                        <div class="pv-string-header">
-                          <span x-text="'String ' + p + ' (' + (results?.stringConfig?.series || 0) + ' Seri) &rarr; Port MPPT ' + getMpptTrackerForString(p)"></span>
-                          <span class="text-primary" x-text="(results?.stringConfig?.totalVmp || 0) + 'V · ' + (inputs?.panelImp || 13) + 'A'"></span>
-                        </div>
-                        <div class="pv-panels-row">
-                          <template x-for="s in stringSeriesArray" :key="s">
-                            <div class="d-flex align-items-center">
-                              <div class="pv-panel-module">
-                                <span class="badge bg-danger position-absolute top-0 start-0 p-0 px-1" style="font-size: 0.45rem; line-height: 1;">+</span>
-                                <span class="badge bg-primary position-absolute top-0 end-0 p-0 px-1" style="font-size: 0.45rem; line-height: 1;">-</span>
-                                <div style="font-size: 0.62rem; font-weight: bold;" x-text="'PV ' + s"></div>
-                                <div style="font-size: 0.52rem; opacity: 0.9;" x-text="(inputs?.wpPerPanel || 550) + 'W'"></div>
-                                <div style="font-size: 0.52rem; opacity: 0.9;" x-text="(inputs?.panelVmp || 42) + 'V'"></div>
-                              </div>
-                              <div class="pv-wire-arrow" x-show="s < (results?.stringConfig?.series || 0)">&rarr;</div>
-                            </div>
-                          </template>
-                          <div class="pv-combiner-box">
-                            <span style="font-size: 0.58rem; color: #64748b;" x-text="'Ke MPPT ' + getMpptTrackerForString(p)"></span>
-                            <span class="text-primary fw-bold" style="font-size: 0.65rem;" x-text="(results?.stringConfig?.totalVmp || 0) + 'V'"></span>
-                            <span class="text-dark" style="font-size: 0.6rem;" x-text="(inputs?.panelImp || 13) + 'A'"></span>
-                          </div>
-                        </div>
-                      </div>
-                    </template>
-                  </div>
-                  
-                  <!-- Ringkasan Jalur MPPT -->
-                  <div class="p-1 px-2 mt-1 bg-white rounded border d-flex justify-content-between align-items-center"
-                       x-show="(inputs.mpptCount || 1) === 1 && (results?.stringConfig?.parallel || 1) > 1">
-                    <span class="text-muted" style="font-size: 0.7rem;">⚡ Masuk MPPT 1:</span>
-                    <span class="fw-bold text-success" style="font-size: 0.72rem;"
-                          x-text="(results?.stringConfig?.totalVmp || 0) + 'V · ' + (results?.stringConfig?.totalImp || 0) + 'A (' + (results?.stringConfig?.parallel || 1) + ' String Paralel via Combiner)'"></span>
-                  </div>
-                  <div class="p-1 px-2 mt-1 bg-white rounded border d-flex justify-content-between align-items-center"
-                       x-show="(inputs.mpptCount || 1) === 1 && (results?.stringConfig?.parallel || 1) === 1">
-                    <span class="text-muted" style="font-size: 0.7rem;">⚡ Masuk MPPT 1:</span>
-                    <span class="fw-bold text-success" style="font-size: 0.72rem;"
-                          x-text="(results?.stringConfig?.totalVmp || 0) + 'V · ' + (results?.stringConfig?.totalImp || 0) + 'A (String Tunggal)'"></span>
-                  </div>
-                  <div class="p-1 px-2 mt-1 bg-white rounded border d-flex justify-content-between align-items-center"
-                       x-show="(inputs.mpptCount || 1) > 1">
-                    <span class="text-muted" style="font-size: 0.7rem;">⚡ Multi-Tracker:</span>
-                    <span class="fw-bold text-success" style="font-size: 0.72rem;"
-                          x-text="'Beban terbagi mandiri ke ' + (inputs.mpptCount || 2) + ' MPPT (' + (results?.stringConfig?.currentPerMppt || 13) + 'A per port)'"></span>
-                  </div>
-                </div>
+              <!-- Link / Rujukan ke Diagram Lengkap -->
+              <div class="mt-2 pt-2 border-top text-muted small" style="font-size: 0.74rem;">
+                <span class="text-primary fw-semibold">📐 Diagram Rangkaian Lengkap:</span>
+                Tersaji lengkap (Array PV, Inverter, Baterai, Grid PLN & Beban) pada diagram visual di bawah.
               </div>
 
             </div>
@@ -749,6 +695,262 @@
           </div>
         </div>
 
+      </div>
+    </section>
+
+    <!-- ===== DIAGRAM VISUAL RANGKAIAN SISTEM ===== -->
+    <section id="diagram-sistem" x-show="hasResults" x-cloak class="mb-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary fs-6">📐 Skematik</span>
+            <h2 class="h5 mb-0 fw-bold">Diagram Visual Rangkaian Sistem PLTS Lengkap</h2>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <span class="badge bg-warning text-dark" x-text="'PV Array: ' + (results?.panelCount || 0) + ' Modul (' + (results?.stringConfig?.series || 0) + 'S ' + (results?.stringConfig?.parallel || 0) + 'P)'"></span>
+            <span class="badge bg-danger" x-text="'Bank Baterai: ' + (inputs?.systemVoltage || 48) + 'V (' + (results?.batteryModules || 1) + ' Unit Paralel)'"></span>
+            <span class="badge bg-info text-dark" x-text="'Inverter: ' + (results?.inverterRatedWatts || 5000) + 'W (' + (inputs?.systemVoltage || 48) + 'V)'"></span>
+          </div>
+        </div>
+
+        <div class="card-body p-3 p-md-4 bg-light">
+          <!-- Flow diagram layout -->
+          <div class="row g-3 align-items-stretch">
+            
+            <!-- KOLOM KIRI: SUMBER ENERGI DC (PANEL SURYA) -->
+            <div class="col-lg-4 d-flex flex-column justify-content-between">
+              
+              <!-- BLOK 1: ARRAY PANEL SURYA -->
+              <div class="schematic-card card-pv mb-3 flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-warning">
+                  <span class="fw-bold text-dark" style="font-size: 0.85rem;">☀️ 1. Array Panel Surya (PV)</span>
+                  <span class="badge bg-warning text-dark" x-text="(results?.panelTotalActualWp || 0) + ' Wp'"></span>
+                </div>
+                
+                <div class="small text-muted mb-2" style="font-size: 0.75rem;">
+                  Model: <strong class="text-dark" x-text="selectedPanelName"></strong><br>
+                  Susunan: <strong class="text-primary" x-text="(results?.stringConfig?.series || 0) + ' Seri × ' + (results?.stringConfig?.parallel || 0) + ' Paralel'"></strong> 
+                  (<span x-text="(results?.panelCount || 0) + ' lembar total'"></span>)
+                </div>
+
+                <!-- Visual Panel Modules Per String -->
+                <div class="pv-diagram-container mb-2">
+                  <div class="pv-diagram-scroll">
+                    <template x-for="p in stringParallelArray" :key="p">
+                      <div class="pv-string-block mb-2">
+                        <div class="pv-string-header">
+                          <span x-text="'String ' + p + ' (' + (results?.stringConfig?.series || 0) + 'S)'"></span>
+                          <span class="text-primary" x-text="(results?.stringConfig?.totalVmp || 0) + 'V · ' + (inputs?.panelImp || 13) + 'A'"></span>
+                        </div>
+                        <div class="pv-panels-row">
+                          <template x-for="s in stringSeriesArray" :key="s">
+                            <div class="d-flex align-items-center">
+                              <div class="pv-panel-module">
+                                <span class="badge bg-danger position-absolute top-0 start-0 p-0 px-1" style="font-size: 0.45rem;">+</span>
+                                <span class="badge bg-primary position-absolute top-0 end-0 p-0 px-1" style="font-size: 0.45rem;">-</span>
+                                <div style="font-size: 0.6rem; font-weight: bold;" x-text="'PV ' + s"></div>
+                                <div style="font-size: 0.5rem;" x-text="(inputs?.wpPerPanel || 550) + 'W'"></div>
+                              </div>
+                              <div class="pv-wire-arrow" x-show="s < (results?.stringConfig?.series || 0)">&rarr;</div>
+                            </div>
+                          </template>
+                          <div class="pv-combiner-box" x-show="(results?.stringConfig?.parallel || 1) > 1">
+                            <span style="font-size: 0.55rem; color: #64748b;">Combiner</span>
+                            <span class="text-primary fw-bold" style="font-size: 0.6rem;" x-text="(results?.stringConfig?.totalVmp || 0) + 'V'"></span>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <div class="p-1 px-2 bg-white rounded border small" style="font-size: 0.72rem;">
+                  <div><strong>Total Tegangan Vmp:</strong> <span class="text-success fw-bold" x-text="(results?.stringConfig?.totalVmp || 0) + ' VDC'"></span></div>
+                  <div><strong>Total Arus PV (Imp):</strong> <span class="text-primary fw-bold" x-text="(results?.stringConfig?.totalImp || 0) + ' A'"></span></div>
+                </div>
+              </div>
+
+              <!-- JALUR KABEL & PENGAMAN PV KE INVERTER -->
+              <div class="schematic-cable cable-pv">
+                <div class="w-100">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>⚡ Jalur Kabel DC PV &rarr;</span>
+                    <span class="mcb-tag text-warning border-warning">
+                      ⚡ MCB DC: <span x-text="(results?.wiring?.pv?.stringMcbAmps || 20) + 'A'"></span>
+                    </span>
+                  </div>
+                  <div class="d-flex justify-content-between text-muted" style="font-size: 0.68rem;">
+                    <span>Kabel Surya: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringCableMm2 || 6) + ' mm² (Solar Cable)'"></strong></span>
+                    <span>Arus Desain: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringDesignCurrent || 0) + 'A'"></strong></span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- KOLOM TENGAH: INVERTER PUSAT KENDALI -->
+            <div class="col-lg-4 d-flex flex-column justify-content-between">
+              
+              <!-- JALUR GRID PLN KE INVERTER (ATAS) -->
+              <div class="schematic-card card-grid mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-primary">
+                  <span class="fw-bold text-dark" style="font-size: 0.85rem;">🔌 2. Grid PLN (AC Input)</span>
+                  <span class="badge bg-primary" x-text="(inputs?.powerVa || 2200) + ' VA'"></span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center small" style="font-size: 0.72rem;">
+                  <span>Daya Nyata: <strong class="text-dark" x-text="(Math.round((inputs?.powerVa || 2200) * 0.8)) + ' W'"></strong> (cos &phi; 0,8)</span>
+                  <span class="mcb-tag text-primary border-primary">
+                    ⚡ MCB PLN: <span x-text="(results?.wiring?.ac?.plnMcbAmps || 10) + 'A'"></span>
+                  </span>
+                </div>
+                <div class="text-muted mt-1" style="font-size: 0.68rem;">
+                  Kabel AC PLN: <strong>3×2,5 mm²</strong> · 220V 50Hz Fasa, Netral, Ground
+                </div>
+              </div>
+
+              <!-- BLOK UTAMA INVERTER -->
+              <div class="schematic-card card-inverter my-2 p-3 text-center">
+                <div class="badge bg-primary mb-2 px-3 py-1 text-uppercase" style="letter-spacing: 0.5px;">Unit Pusat Kendali</div>
+                <h4 class="h5 fw-bold mb-1 text-white" x-text="selectedInverterName"></h4>
+                <div class="text-warning fw-semibold mb-2" style="font-size: 0.85rem;">
+                  Inverter Off-Grid / Hybrid <span x-text="(results?.inverterRatedWatts || 5000) + ' Watt'"></span>
+                </div>
+
+                <div class="p-2 rounded bg-black bg-opacity-25 border border-secondary text-start mb-2 small" style="font-size: 0.72rem;">
+                  <div class="row g-1">
+                    <div class="col-6">Tegangan Sistem: <strong class="text-info" x-text="(inputs?.systemVoltage || 48) + ' Volt'"></strong></div>
+                    <div class="col-6">Tracker MPPT: <strong class="text-info" x-text="(inputs?.mpptCount || 1) + ' MPPT'"></strong></div>
+                    <div class="col-12">Rentang MPPT: <strong class="text-white" x-text="(inputs?.mpptMinVoltage || 60) + 'V - ' + (inputs?.mpptMaxVoltage || 245) + 'V'"></strong> (Max <span x-text="(inputs?.mpptMaxCurrent || 100) + 'A'"></span>)</div>
+                  </div>
+                </div>
+
+                <!-- PORT KONEKSI VISUAL -->
+                <div class="d-flex justify-content-between gap-1 mt-2 text-center" style="font-size: 0.62rem;">
+                  <div class="p-1 px-2 rounded bg-warning bg-opacity-25 border border-warning text-warning">
+                    <div>PORT PV IN</div>
+                    <div class="fw-bold" x-text="(results?.stringConfig?.totalVmp || 0) + 'V'"></div>
+                  </div>
+                  <div class="p-1 px-2 rounded bg-primary bg-opacity-25 border border-primary text-info">
+                    <div>PORT GRID</div>
+                    <div class="fw-bold">220V AC</div>
+                  </div>
+                  <div class="p-1 px-2 rounded bg-danger bg-opacity-25 border border-danger text-danger">
+                    <div>PORT BAT (+/-)</div>
+                    <div class="fw-bold" x-text="(inputs?.systemVoltage || 48) + 'V DC'"></div>
+                  </div>
+                  <div class="p-1 px-2 rounded bg-success bg-opacity-25 border border-success text-success">
+                    <div>PORT LOAD</div>
+                    <div class="fw-bold">220V AC</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- JALUR KABEL & PENGAMAN BATERAI KE INVERTER (BAWAH) -->
+              <div class="schematic-cable cable-battery mt-2">
+                <div class="w-100">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span>⚡ Jalur Kabel DC Baterai &rarr;</span>
+                    <span class="mcb-tag text-danger border-danger">
+                      ⚡ MCB DC: <span x-text="(results?.wiring?.battery?.mcbAmps || 250) + 'A'"></span>
+                    </span>
+                  </div>
+                  <div class="d-flex justify-content-between text-muted" style="font-size: 0.68rem;">
+                    <span>Kabel Serabut NYAF: <strong class="text-dark" x-text="(results?.wiring?.battery?.cableMm2 || 35) + ' mm²'"></strong></span>
+                    <span>Arus Desain: <strong class="text-dark" x-text="(results?.wiring?.battery?.designCurrent || 0) + 'A'"></strong></span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- KOLOM KANAN: BANK BATERAI & BEBAN RUMAH -->
+            <div class="col-lg-4 d-flex flex-column justify-content-between">
+              
+              <!-- JALUR OUTPUT AC KE BEBAN RUMAH (ATAS) -->
+              <div class="schematic-card card-load mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-success">
+                  <span class="fw-bold text-dark" style="font-size: 0.85rem;">🏠 3. Beban Rumah (AC Output)</span>
+                  <span class="badge bg-success">220V AC</span>
+                </div>
+                
+                <div class="schematic-cable cable-load p-1 px-2 my-1">
+                  <div class="w-100 d-flex justify-content-between align-items-center">
+                    <span>⚡ Jalur AC Out &rarr;</span>
+                    <span class="mcb-tag text-success border-success">
+                      ⚡ MCB AC: <span x-text="(results?.wiring?.ac?.inverterMcbAmps || 20) + 'A'"></span>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="small text-muted mb-1" style="font-size: 0.72rem;">
+                  <div>Daya Puncak: <strong class="text-dark" x-text="(results?.peakPowerWatts || 1760) + ' Watt'"></strong> (Rekomendasi Inverter: <span class="fw-semibold text-primary" x-text="results?.inverterRecommendation"></span>)</div>
+                  <div>Konsumsi Harian: <strong class="text-dark" x-text="(results?.energyKwh || 5.1) + ' kWh/hari'"></strong></div>
+                  <div>Kabel Distribusi Rumah: <strong>3×2,5 mm² NYM / NYA</strong></div>
+                </div>
+              </div>
+
+              <!-- BLOK BANK BATERAI (BAWAH) -->
+              <div class="schematic-card card-battery flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-danger">
+                  <span class="fw-bold text-dark" style="font-size: 0.85rem;">🔋 4. Bank Baterai (Cadangan 24 Jam)</span>
+                  <span class="badge bg-danger" x-text="'Sistem ' + (inputs?.systemVoltage || 48) + 'V'"></span>
+                </div>
+
+                <div class="small text-muted mb-2" style="font-size: 0.75rem;">
+                  Tipe: <strong>Lithium LiFePO4</strong> (DoD <span x-text="(inputs?.dod || 80) + '%'"></span>)<br>
+                  Konfigurasi: <strong class="text-danger" x-text="(results?.batteryModules || 1) + ' Unit Paralel'"></strong> 
+                  (@<span x-text="(results?.moduleAh || 200) + ' Ah per modul'"></span>)
+                </div>
+
+                <!-- Busbar Paralel Baterai -->
+                <div class="bg-white p-2 rounded border mb-2">
+                  <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.65rem;">
+                    <span class="text-danger fw-bold">Busbar Positif (+)</span>
+                    <span class="text-dark fw-bold">Busbar Negatif (-)</span>
+                  </div>
+                  <div class="busbar-strip busbar-pos"></div>
+                  <div class="busbar-strip busbar-neg mb-2"></div>
+
+                  <!-- Unit-unit modul baterai paralel -->
+                  <div class="battery-modules-list">
+                    <template x-for="b in batteryModulesArray" :key="b">
+                      <div class="battery-module-box">
+                        <div>
+                          <span class="badge bg-danger me-1" style="font-size: 0.6rem;">+</span>
+                          <span class="fw-bold text-dark" x-text="'Modul ' + b + ' (' + (inputs?.systemVoltage || 48) + 'V)'"></span>
+                          <span class="badge bg-dark ms-1" style="font-size: 0.6rem;">-</span>
+                        </div>
+                        <div class="text-muted fw-semibold" x-text="(results?.moduleAh || 200) + ' Ah'"></div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <div class="p-1 px-2 bg-white rounded border small" style="font-size: 0.72rem;">
+                  <div><strong>Total Kapasitas Bank:</strong> <span class="text-danger fw-bold" x-text="((results?.batteryModules || 1) * (results?.moduleAh || 200)) + ' Ah (' + (results?.batteryKwh || 6.4) + ' kWh)'"></span></div>
+                  <div><strong>Kapasitas Bersih Efektif:</strong> <span class="text-dark fw-bold" x-text="(results?.batteryAh || 0) + ' Ah'"></span></div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Keterangan Standar Kode Warna Kabel & Pengaman -->
+          <div class="mt-3 p-2 bg-white rounded border d-flex justify-content-between align-items-center flex-wrap gap-2 text-muted" style="font-size: 0.72rem;">
+            <div>
+              <span class="fw-bold text-dark">🎨 Kode Warna Kabel Standar:</span>
+              <span class="badge bg-warning text-dark ms-1">Jalur PV (Solar Cable)</span>
+              <span class="badge bg-danger ms-1">Jalur Baterai (NYAF Merah/Hitam)</span>
+              <span class="badge bg-primary ms-1">Jalur Grid PLN (AC)</span>
+              <span class="badge bg-success ms-1">Jalur Beban Rumah (AC 220V)</span>
+            </div>
+            <div>
+              <span class="fw-bold text-dark">🛡️ Pengaman:</span> Semua MCB DC & AC bertipe din-rail standar PUIL/SNI.
+            </div>
+          </div>
+
+        </div>
       </div>
     </section>
 

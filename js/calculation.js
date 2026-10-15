@@ -285,6 +285,31 @@ export function wiringSizing({
   };
 }
 
+export function plnMcbAmps(va = 2200) {
+  const map = {
+    450: 2,
+    900: 4,
+    1300: 6,
+    2200: 10,
+    3500: 16,
+    4400: 20,
+    5500: 25,
+    6600: 32,
+    7700: 35,
+    11000: 50,
+  };
+  const v = Number(va) || 2200;
+  return map[v] || Math.ceil(v / 220);
+}
+
+export function inverterAcMcbAmps(watts = 5000) {
+  const w = Number(watts) || 5000;
+  const current = w / 220;
+  const designCurrent = current * 1.25;
+  const ratings = [6, 10, 16, 20, 25, 32, 40, 50, 63];
+  return ratings.find((r) => r >= designCurrent) || Math.ceil(designCurrent);
+}
+
 export function calculateElectricityCost(kwh, options = {}) {
   const energyKwh = Number(kwh) >= 0 ? Number(kwh) : 0;
   const tariff = options.tariffPerKwh !== undefined && Number(options.tariffPerKwh) >= 0
@@ -408,6 +433,12 @@ export function calculateSizing({
     systemVoltage: safeSystemVoltage,
     sf: 1.25,
   });
+
+  wiring.ac = {
+    plnMcbAmps: plnMcbAmps(powerVa),
+    inverterMcbAmps: inverterAcMcbAmps(safeInverterRatedWatts),
+    cableMm2: safeInverterRatedWatts <= 3500 ? 2.5 : 4,
+  };
 
   const inverterRec = inverterRecommendation(peakPowerWatts, safeSystemVoltage);
   const altChargingHours = alternativeChargingHours(safeEnergyWh, peakPowerWatts);

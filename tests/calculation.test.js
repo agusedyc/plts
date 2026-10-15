@@ -16,6 +16,8 @@ import {
   minPanelsForMppt,
   minBatteryAhForInverter,
   calculateElectricityCost,
+  plnMcbAmps,
+  inverterAcMcbAmps,
 } from '../js/calculation.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -346,4 +348,20 @@ test('calculateElectricityCost calculates PLN cost with PPN 12%, PPJ 10%, and mo
   assert.equal(custom.ppjDaily, 750);
   assert.equal(custom.totalCostDaily, 17400);
   assert.equal(custom.totalCostMonthly, 522000);
+});
+
+test('plnMcbAmps returns standard PLN MCB rating for VA tier', () => {
+  assert.equal(plnMcbAmps(450), 2);
+  assert.equal(plnMcbAmps(900), 4);
+  assert.equal(plnMcbAmps(1300), 6);
+  assert.equal(plnMcbAmps(2200), 10);
+  assert.equal(plnMcbAmps(3500), 16);
+  assert.equal(plnMcbAmps(4400), 20);
+  assert.equal(plnMcbAmps(5500), 25);
+});
+
+test('inverterAcMcbAmps returns proper AC output MCB rating based on rated watts', () => {
+  assert.equal(inverterAcMcbAmps(1000), 6);
+  assert.equal(inverterAcMcbAmps(3000), 20); // 3000/220*1.25 = 17A -> 20A
+  assert.equal(inverterAcMcbAmps(5000), 32); // 5000/220*1.25 = 28.4A -> 32A
 });

@@ -329,6 +329,11 @@ export function pltsApp() {
       return Array.from({ length: Math.max(0, s) }, (_, i) => i + 1);
     },
 
+    get batteryModulesArray() {
+      const n = Number(this.results?.batteryModules) || 1;
+      return Array.from({ length: Math.max(1, n) }, (_, i) => i + 1);
+    },
+
     setMpptCount(count) {
       this.inputs.mpptCount = Number(count) || 1;
       this.hitung();
