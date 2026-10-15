@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kalkulator PLTS 24 Jam</title>
-  <meta name="description" content="Kalkulator untuk menghitung kebutuhan komponen PLTS off-grid: Inverter, Panel Surya, Baterai, dan Solar Charge Controller.">
+  <title>Kalkulator PLTS 24 Jam Nonstop</title>
+  <meta name="description" content="Kalkulator perancangan sistem PLTS Off-Grid 24 jam: Inverter, Baterai LiFePO4 48V, Panel Surya, String Sizing, dan Pengaman Kabel & MCB.">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -12,143 +12,739 @@
   <div x-data="pltsApp()" class="container py-4">
 
     <header class="mb-4">
-      <h1 class="h3 mb-1">Kalkulator PLTS 24 Jam</h1>
-      <p class="text-muted mb-0">Hitung kebutuhan Inverter, Panel Surya, Baterai, dan Solar Charge Controller (SCC) untuk PLTS off-grid rumah Anda.</p>
+      <h1 class="h3 mb-1 text-primary fw-bold">Kalkulator PLTS 24 Jam Nonstop</h1>
+      <p class="text-muted mb-0">Rancang sistem PLTS Off-Grid rumah Anda (Inverter, Baterai LiFePO4 48V, Panel Surya, Konfigurasi String, dan Pengaman Kabel & MCB).</p>
     </header>
 
-    <!-- ===== FORM ===== -->
+    <!-- ===== FORM INPUT ===== -->
     <form id="form-plts" @submit.prevent="hitung()" novalidate>
-      <div class="card mb-4">
-        <div class="card-header fw-semibold">Input Kebutuhan</div>
+      
+      <!-- TAHAP 1: TARGET SISTEM & INVERTER -->
+      <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-primary text-white py-3">
+          <span class="badge bg-white text-primary me-2">Tahap 1</span> 
+          <strong>Target Sistem & Daya Inverter (Operasional 24 Jam)</strong>
+        </div>
         <div class="card-body">
-
           <div class="row g-3">
-
             <div class="col-md-6">
-              <label class="form-label" for="peakPower">Daya Terpasang / Beban Puncak (W)</label>
-              <input type="number" inputmode="decimal" min="1" step="any" class="form-control" id="peakPower"
-                     x-model.number="inputs.peakPower" placeholder="contoh: 5500"
-                     title="Beban maksimum yang mungkin ditarik bersamaan. Dipakai untuk sizing inverter.">
-              <div class="text-danger small mt-1" x-show="errors.peakPower" x-text="errors.peakPower"></div>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label" for="energyKwh">Total Pemakaian Energi Harian (kWh)</label>
-              <input type="number" inputmode="decimal" min="0.1" step="any" class="form-control" id="energyKwh"
-                     x-model.number="inputs.energyKwh" placeholder="contoh: 30"
-                     title="Total konsumsi listrik dalam 24 jam. Diterima dalam kWh.">
-              <div class="text-danger small mt-1" x-show="errors.energyKwh" x-text="errors.energyKwh"></div>
-              <div class="form-text" x-show="warnings.energyKwh" x-text="warnings.energyKwh"></div>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label" for="sph">Jam Efektif Matahari / SPH (jam)</label>
-              <input type="number" inputmode="decimal" min="1" max="10" step="any" class="form-control" id="sph"
-                     x-model.number="inputs.sph" placeholder="contoh: 4"
-                     title="Lama penyinaran matahari optimal per hari (Sun Peak Hours). Default Indonesia 4-5 jam.">
-              <div class="text-danger small mt-1" x-show="errors.sph" x-text="errors.sph"></div>
-              <div class="text-warning small mt-1" x-show="warnings.sph" x-text="warnings.sph"></div>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label" for="systemVoltage">Tegangan Sistem (V)</label>
-              <select class="form-select" id="systemVoltage" x-model.number="inputs.systemVoltage"
-                      title="Tegangan DC baterai & inverter. Disarankan 48V untuk sistem di atas 3000W.">
-                <option :value="12">12 V</option>
-                <option :value="24">24 V</option>
-                <option :value="48">48 V</option>
+              <label class="form-label fw-semibold" for="powerVa">
+                Daya Listrik PLN Rumah (VA)
+                <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Pilih daya langganan PLN rumah Anda di Indonesia. Daya nyata dihitung otomatis dengan faktor daya cos φ 0,8.">?</span>
+              </label>
+              <select class="form-select mb-2" id="powerVa" x-model.number="inputs.powerVa" @change="onVaInput()">
+                <option :value="450">450 VA (Daya Nyata: 360 Watt) - Subsidi R-1/450</option>
+                <option :value="900">900 VA (Daya Nyata: 720 Watt) - R-1/900</option>
+                <option :value="1300">1.300 VA (Daya Nyata: 1.040 Watt) - R-1/1300</option>
+                <option :value="2200">2.200 VA (Daya Nyata: 1.760 Watt) - R-1/2200 (Default)</option>
+                <option :value="3500">3.500 VA (Daya Nyata: 2.800 Watt) - R-2/3500</option>
+                <option :value="4400">4.400 VA (Daya Nyata: 3.520 Watt) - R-2/4400</option>
+                <option :value="5500">5.500 VA (Daya Nyata: 4.400 Watt) - R-2/5500</option>
+                <option :value="6600">6.600 VA (Daya Nyata: 5.280 Watt) - R-3/6600</option>
+                <option :value="7700">7.700 VA (Daya Nyata: 6.160 Watt)</option>
+                <option :value="11000">11.000 VA (Daya Nyata: 8.800 Watt)</option>
               </select>
-              <div class="text-danger small mt-1" x-show="errors.systemVoltage" x-text="errors.systemVoltage"></div>
+              
+              <!-- Tombol Cepat Pilihan Daya Populer -->
+              <div class="d-flex gap-1 flex-wrap mb-1">
+                <template x-for="va in [900, 1300, 2200, 3500, 5500]" :key="va">
+                  <button type="button" class="btn btn-sm py-0 px-2"
+                          :class="inputs.powerVa === va ? 'btn-primary' : 'btn-outline-secondary'"
+                          @click="setPowerVa(va)"
+                          x-text="va + ' VA'"></button>
+                </template>
+              </div>
+              <div class="text-danger small mt-1" x-show="errors.powerVa" x-text="errors.powerVa"></div>
+              <div class="form-text text-muted">
+                Daya nyata beban puncak: <strong class="text-dark" x-text="(Math.round((inputs.powerVa || 2200) * 0.8)) + ' Watt'"></strong> (Faktor daya cos &phi; 0,8).
+              </div>
             </div>
 
             <div class="col-md-6">
-              <label class="form-label" for="batteryType">Jenis Baterai</label>
-              <select class="form-select" id="batteryType" x-model="inputs.batteryType" @change="onBatteryTypeChange()"
-                      title="Menentukan default Depth of Discharge secara otomatis.">
-                <option value="lithium">Lithium / LiFePO4 (DoD 80%)</option>
+              <label class="form-label fw-semibold" for="systemVoltage">Sistem Tegangan Baterai <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Tegangan bank baterai. Sistem 48V direkomendasikan agar arus (Ampere) tetap rendah sehingga kabel efisien dan tidak panas.">?</span></label>
+              <select class="form-select" id="systemVoltage" x-model.number="inputs.systemVoltage" @change="onSystemVoltageChange()">
+                <option :value="48">48 Volt (Standar Utama & Direkomendasikan)</option>
+                <option :value="24">24 Volt</option>
+                <option :value="12">12 Volt</option>
+              </select>
+              <div class="form-text">Tegangan 48V menjaga arus tetap rendah dan efisien untuk operasional 24 jam nonstop.</div>
+            </div>
+
+            <div class="col-12">
+              <div class="p-2 bg-light rounded border small d-flex flex-wrap justify-content-between align-items-center">
+                <div>
+                  <span class="badge bg-secondary me-1" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Sumber pengisian daya baterai sekunder (via PLN/Genset) ketika cuaca hujan atau tanpa sinar matahari.">Charging Alternatif (?)</span>
+                  Daya nyata <strong x-text="(Math.round((inputs.powerVa || 2200) * 0.8)) + ' W'"></strong> sebagai referensi pengisian daya baterai via PLN/Genset saat tanpa sinar matahari.
+                </div>
+                <div class="mt-1 mt-sm-0">
+                  Estimasi durasi: <span class="badge bg-primary fs-6" x-text="'± ' + chargingHoursPreview + ' jam'"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAHAP 2: ENERGI HARIAN -->
+      <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-secondary text-white py-3">
+          <span class="badge bg-light text-dark me-2">Tahap 2</span>
+          <strong>Perhitungan Kebutuhan Energi Harian</strong>
+        </div>
+        <div class="card-body">
+          <label class="form-label fw-semibold">Metode Perhitungan Energi</label>
+          <div class="btn-group w-100 mb-3" role="group">
+            <input type="radio" class="btn-check" name="energyMode" id="modeAppliances" value="appliances" x-model="inputs.energyMode" @change="onEnergyModeChange()">
+            <label class="btn btn-outline-secondary" for="modeAppliances">1. Rincian Per Alat Listrik</label>
+            <input type="radio" class="btn-check" name="energyMode" id="modeManual" value="manual" x-model="inputs.energyMode" @change="onEnergyModeChange()">
+            <label class="btn btn-outline-secondary" for="modeManual">2. Input Manual kWh</label>
+          </div>
+
+          <!-- Pilihan 1: Rincian Alat -->
+          <div x-show="inputs.energyMode === 'appliances'" class="mb-3">
+            <div class="table-responsive mb-2">
+              <table class="table table-bordered table-sm align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>Nama Alat</th>
+                    <th style="width: 100px;">Watt</th>
+                    <th style="width: 100px;">Jam Nyala</th>
+                    <th style="width: 80px;">Qty</th>
+                    <th style="width: 120px;">Energi (Wh)</th>
+                    <th style="width: 60px;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="(app, idx) in inputs.appliances" :key="idx">
+                    <tr>
+                      <td x-text="app.name"></td>
+                      <td x-text="app.watts + ' W'"></td>
+                      <td x-text="app.hours + ' Jam'"></td>
+                      <td x-text="app.qty"></td>
+                      <td class="fw-semibold" x-text="((app.watts || 0) * (app.hours || 0) * (app.qty || 1)) + ' Wh'"></td>
+                      <td>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" @click="removeAppliance(idx)">×</button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+                <tfoot>
+                  <tr class="table-light fw-bold">
+                    <td colspan="4">Total Energi Rincian Alat:</td>
+                    <td colspan="2" class="text-primary" x-text="(totalApplianceWh || 0) + ' Wh (' + (Math.round((totalApplianceWh || 0) / 100) / 10) + ' kWh)'"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- Tambah Alat Form -->
+            <div class="row g-2 align-items-center bg-light p-2 rounded border">
+              <div class="col-sm-4">
+                <input type="text" class="form-control form-control-sm" placeholder="Nama alat (misal: Kulkas)" x-model="inputs.newAppliance.name">
+              </div>
+              <div class="col-sm-2">
+                <input type="number" class="form-control form-control-sm" placeholder="Watt" x-model.number="inputs.newAppliance.watts">
+              </div>
+              <div class="col-sm-2">
+                <input type="number" class="form-control form-control-sm" placeholder="Jam" x-model.number="inputs.newAppliance.hours">
+              </div>
+              <div class="col-sm-2">
+                <input type="number" class="form-control form-control-sm" placeholder="Qty" x-model.number="inputs.newAppliance.qty">
+              </div>
+              <div class="col-sm-2">
+                <button type="button" class="btn btn-sm btn-secondary w-100" @click="addAppliance()">+ Tambah</button>
+              </div>
+            </div>
+            <div class="text-danger small mt-1" x-show="errors.appliances" x-text="errors.appliances"></div>
+          </div>
+
+          <!-- Pilihan 2: Manual kWh -->
+          <div x-show="inputs.energyMode === 'manual'" class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="energyKwh">Total Pemakaian Energi Harian (kWh)</label>
+              <input type="number" inputmode="decimal" min="0.1" step="any" class="form-control" id="energyKwh"
+                     x-model.number="inputs.energyKwh" @input="hitung()" placeholder="contoh: 20">
+              <div class="text-danger small mt-1" x-show="errors.energyKwh" x-text="errors.energyKwh"></div>
+              <div class="form-text">Total energi listrik harian 24 jam. Otomatis tersinkron jika beralih dari rincian alat.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAHAP 3 & 4: PARAMETER BATERAI & PANEL -->
+      <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-secondary text-white py-3">
+          <span class="badge bg-light text-dark me-2">Tahap 3 & 4</span>
+          <strong>Parameter Baterai & Panel Surya</strong>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="batteryType">Tipe Baterai <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="LiFePO4 memiliki efisiensi 95%, tahan siklus harian mendalam (DoD 80%), dan usia pakai 10+ tahun. Aki VRLA hanya aman DoD 50%.">?</span></label>
+              <select class="form-select" id="batteryType" x-model="inputs.batteryType" @change="onBatteryTypeChange()">
+                <option value="lithium">Lithium LiFePO4 (Default, DoD 80%)</option>
                 <option value="vrla">VRLA / Aki (DoD 50%)</option>
               </select>
             </div>
 
-            <div class="col-md-6">
-              <label class="form-label" for="dod">Depth of Discharge / DoD (%)</label>
-              <input type="number" inputmode="decimal" min="1" max="90" step="any" class="form-control" id="dod"
-                     x-model.number="inputs.dod" placeholder="contoh: 80"
-                     title="Batas maksimum kapasitas baterai yang boleh dikuras. Default 80% Lithium, 50% VRLA.">
-              <div class="text-danger small mt-1" x-show="errors.dod" x-text="errors.dod"></div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="moduleAh">Kapasitas Per Modul Baterai (Ah) <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Ampere-hour (Ah) modul baterai per unit di pasaran (umumnya modul server rack 48V 100Ah atau 200Ah).">?</span></label>
+              <select class="form-select" id="moduleAh" x-model.number="inputs.moduleAh" @change="hitung()">
+                <option :value="200">200 Ah (Standar Rekomendasi)</option>
+                <option :value="100">100 Ah</option>
+                <option :value="280">280 Ah</option>
+              </select>
             </div>
 
-            <div class="col-md-6">
-              <label class="form-label" for="autonomyDays">Hari Otonomi (hari)</label>
-              <input type="number" inputmode="decimal" min="1" max="5" step="1" class="form-control" id="autonomyDays"
-                     x-model.number="inputs.autonomyDays" placeholder="default: 1"
-                     title="Cadangan hari saat matahari redup/mendung. Default 1 (tanpa cadangan ekstra).">
-              <div class="text-danger small mt-1" x-show="errors.autonomyDays" x-text="errors.autonomyDays"></div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="sph">Peak Sun Hour / PSH (jam/hari) <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Jam ekuivalen penyinaran matahari penuh intensitas 1000 W/m². Wilayah Indonesia rata-rata 4,0 - 4,5 jam/hari.">?</span></label>
+              <input type="number" inputmode="decimal" min="1" max="10" step="0.1" class="form-control" id="sph"
+                     x-model.number="inputs.sph" @input="hitung()" placeholder="default: 4.5">
+              <div class="form-text">Rata-rata pencahayaan optimal Indonesia: 4,5 jam/hari.</div>
             </div>
 
-            <div class="col-md-6">
-              <label class="form-label" for="wpPerPanel">Watt Peak per Lembar Panel (WP)</label>
-              <input type="number" inputmode="decimal" min="1" step="any" class="form-control" id="wpPerPanel"
-                     x-model.number="inputs.wpPerPanel" placeholder="default: 550"
-                     title="Kapasitas puncak satu lembar panel, dipakai untuk menghitung estimasi jumlah lembar.">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="panelSelect">
+                Pilihan Model Panel Surya
+                <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Pilih panel dari basis data JSON (Solana, LESSO, Trina Solar). Spesifikasi Vmp, Imp, Voc otomatis terisi.">?</span>
+              </label>
+              <select class="form-select" id="panelSelect" x-model="inputs.selectedPanelId" @change="onPanelSelect($event.target.value)">
+                <template x-for="p in panels" :key="p.id">
+                  <option :value="p.id" x-text="p.name + ' (' + p.wp + ' Wp)'"></option>
+                </template>
+                <option value="custom">Kustom / Input Manual...</option>
+              </select>
+              <div class="form-text text-muted" x-show="inputs.selectedPanelId !== 'custom'">
+                Spek: <strong class="text-dark" x-text="(inputs.wpPerPanel || 550) + ' Wp'"></strong> (Vmp: <span x-text="(inputs.panelVmp || 42.1) + 'V'"></span>, Imp: <span x-text="(inputs.panelImp || 13.06) + 'A'"></span>).
+              </div>
+              <div class="form-text text-primary" x-show="inputs.selectedPanelId === 'custom'">
+                Daya kustom: <strong x-text="(inputs.wpPerPanel || 550) + ' Wp'"></strong>.
+              </div>
             </div>
 
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="dod">Depth of Discharge / DoD (%) <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Persentase kapasitas baterai yang boleh dikonsumsi. Nilai 80% optimal menjaga masa pakai baterai Lithium di atas 4000-6000 siklus.">?</span></label>
+              <input type="number" min="10" max="95" class="form-control" id="dod" x-model.number="inputs.dod" @input="hitung()">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="autonomyDays">Hari Otonomi (Cadangan Hujan) <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Jumlah hari baterai mampu mencatu beban rumah tanpa ada sinar matahari sama sekali (mandiri dari surya/PLN).">?</span></label>
+              <input type="number" min="1" max="5" class="form-control" id="autonomyDays" x-model.number="inputs.autonomyDays" @input="hitung()">
+            </div>
           </div>
-
-          <div class="d-grid d-sm-flex gap-2 mt-4">
-            <button type="submit" class="btn btn-primary btn-lg">Hitung Kebutuhan</button>
-            <button type="button" class="btn btn-outline-secondary btn-lg" @click="resetForm()">Reset</button>
-          </div>
-
         </div>
       </div>
+
     </form>
 
-    <!-- ===== RESULTS ===== -->
-    <section id="hasil" x-show="hasResults" x-cloak x-transition class="mb-4">
-      <h2 class="h4 mb-3">Hasil Perhitungan</h2>
+    <!-- ===== HASIL PERHITUNGAN ===== -->
+    <section id="hasil" x-show="hasResults" x-cloak class="mb-5">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 mb-0 text-success fw-bold">Hasil Perancangan Sistem PLTS</h2>
+        <span class="badge bg-success py-2 px-3 fs-6" x-text="'Sistem ' + (inputs.systemVoltage || 48) + 'V · 24 Jam Nonstop'"></span>
+      </div>
+
       <div class="row g-3">
 
-        <div class="col-sm-6 col-lg-3">
-          <div class="card result-card border-primary">
-            <div class="card-body text-center">
-              <h3 class="h6 text-muted">Inverter</h3>
-              <p class="display-6 fw-bold" x-text="results?.inverterWatts + ' W'"></p>
-              <p class="text-muted small mb-1">Rumus: Beban Puncak × 1.2</p>
-              <p class="small mb-0" x-text="'Pilih kelas ' + inverterClass"></p>
+        <!-- 1. INVERTER -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card result-card border-primary h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-primary" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Inverter mengubah arus DC baterai menjadi AC 220V untuk peralatan rumah tangga.">Tahap 1</span>
+                <small class="text-muted" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Safety Factor 1,2x untuk cadangan daya mula lonjakan motor/kompresor.">Inverter Off-Grid (?)</small>
+              </div>
+              <h3 class="h5 card-title mb-1">Kapasitas Inverter</h3>
+              <p class="display-6 fw-bold text-primary mb-1" x-text="(results?.inverterWatts || 0) + ' W'"></p>
+              <div class="badge bg-light text-primary border mb-2 text-truncate d-inline-block mw-100 fw-semibold" x-text="selectedInverterName"></div>
+              <div class="p-2 bg-light rounded border mb-2 small">
+                <div><strong>Rekomendasi Pasar:</strong></div>
+                <div class="text-success fw-bold" x-text="results?.inverterRecommendation || '3 kW – 5 kW'"></div>
+              </div>
+              <p class="small text-muted mb-2">Daya nyata beban <span x-text="results?.peakPowerWatts || 0"></span> W. Cadangan lonjakan start beban motor/kompresor kulkas.</p>
+
+              <!-- Pilihan Tipe / Model Inverter -->
+              <div class="border-top pt-2 mt-2">
+                <label class="form-label small fw-semibold mb-1" for="inverterSelect">
+                  Model Inverter Pilihan (<span x-text="(inputs.systemVoltage || 48) + 'V'"></span>):
+                  <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Pilih inverter dari basis data yang kompatibel dengan sistem tegangan baterai ini. Tegangan MPPT dan tracker otomatis disesuaikan.">?</span>
+                </label>
+                <select class="form-select form-select-sm mb-1" id="inverterSelect" x-model="inputs.selectedInverterId" @change="onInverterSelect($event.target.value)">
+                  <template x-for="inv in filteredInverters" :key="inv.id">
+                    <option :value="inv.id" x-text="inv.name"></option>
+                  </template>
+                  <option value="custom">Kustom / Manual...</option>
+                </select>
+                <div class="text-muted small mb-2" style="font-size: 0.74rem;">
+                  Spek MPPT: <strong class="text-dark" x-text="(inputs.mpptMinVoltage || 60) + '-' + (inputs.mpptMaxVoltage || 245) + 'V · Maks ' + (inputs.mpptMaxCurrent || 100) + 'A (' + (inputs.mpptCount || 1) + ' MPPT)'"></strong>
+                </div>
+              </div>
+
+              <!-- Pengaturan Spesifikasi Inverter dan MPPT -->
+              <div class="border-top pt-2 mt-2">
+                <button class="btn btn-sm btn-outline-primary w-100 text-start d-flex justify-content-between align-items-center"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#inverterSpecsCollapse" aria-expanded="false">
+                  <span class="small fw-semibold">⚙️ Spesifikasi Inverter dan MPPT</span>
+                  <span class="badge bg-light text-dark border">Ubah Spek</span>
+                </button>
+                <div class="collapse mt-2" id="inverterSpecsCollapse">
+                  <div class="card card-body bg-light p-2 small border-0">
+                    <div class="row g-2">
+                      <!-- Daya Nominal Inverter -->
+                      <div class="col-12 mb-1">
+                        <label class="form-label mb-0 fw-semibold" for="inverterRatedWatts">
+                          Daya Nominal Inverter (Watt):
+                          <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Kapasitas nominal inverter yang Anda gunakan. Mengubah ini langsung menyesuaikan konfigurasi panel di Tahap 5.">?</span>
+                        </label>
+                        <div class="input-group input-group-sm mt-1 mb-1">
+                          <input type="number" min="500" step="500" class="form-control" id="inverterRatedWatts"
+                                 x-model.number="inputs.inverterRatedWatts" @input="onInverterChange()" placeholder="contoh: 5000">
+                          <span class="input-group-text">Watt</span>
+                        </div>
+                        <div class="d-flex gap-1 mb-1 flex-wrap">
+                          <template x-for="w in [1000, 1500, 3000, 5000, 6000, 8000, 10000]" :key="w">
+                            <button type="button" class="btn btn-sm py-0 px-2"
+                                    :class="inputs.inverterRatedWatts === w ? 'btn-primary' : 'btn-outline-secondary'"
+                                    @click="setInverterRatedWatts(w)"
+                                    x-text="(w >= 1000 ? (w / 1000) + ' kW' : w + ' W')"></button>
+                          </template>
+                        </div>
+                      </div>
+
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="resMpptMinVoltage">Min MPPT / Startup (V)</label>
+                        <input type="number" min="15" max="300" class="form-control form-control-sm" id="resMpptMinVoltage"
+                               x-model.number="inputs.mpptMinVoltage" @input="onManualMpptParamInput()">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="resMpptMaxVoltage">Maks MPPT / Voc (V)</label>
+                        <input type="number" min="100" max="1000" class="form-control form-control-sm" id="resMpptMaxVoltage"
+                               x-model.number="inputs.mpptMaxVoltage" @input="onManualMpptParamInput()">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="resMpptMaxCurrent">Maks Arus MPPT (A)</label>
+                        <input type="number" min="10" max="250" class="form-control form-control-sm" id="resMpptMaxCurrent"
+                               x-model.number="inputs.mpptMaxCurrent" @input="onManualMpptParamInput()">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="resMpptCount">Jumlah Tracker</label>
+                        <select class="form-select form-select-sm" id="resMpptCount" x-model.number="inputs.mpptCount" @change="onManualMpptParamInput()">
+                          <option :value="1">1 MPPT</option>
+                          <option :value="2">2 MPPT</option>
+                        </select>
+                      </div>
+                      <div class="col-12 mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100 py-0" style="font-size: 0.75rem;" @click="resetMpptParamsToDefault()">
+                          ↺ Reset ke Default Model Terpilih
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
 
-        <div class="col-sm-6 col-lg-3">
-          <div class="card result-card border-success">
-            <div class="card-body text-center">
-              <h3 class="h6 text-muted">Panel Surya</h3>
-              <p class="display-6 fw-bold" x-text="results?.panelWp + ' WP'"></p>
-              <p class="text-muted small mb-1" x-text="'± ' + results?.panelCount + ' lembar'"></p>
-              <p class="small mb-0">Rumus: (kWh÷SPH) × 1.3</p>
+        <!-- 2. ENERGI HARIAN -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card result-card border-secondary h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-secondary" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Total konsumsi energi harian rumah selama 24 jam operasional.">Tahap 2</span>
+                <small class="text-muted">Energi 24 Jam</small>
+              </div>
+              <h3 class="h5 card-title mb-1">Konsumsi Harian</h3>
+              <p class="display-6 fw-bold text-dark mb-2" x-text="(results?.energyKwh || 0) + ' kWh'"></p>
+
+              <div class="p-2 bg-light rounded border mb-2 small">
+                <div><strong>Total Wh:</strong> <span class="fw-bold" x-text="(results?.energyWh || 0) + ' Wh/hari'"></span></div>
+                <div x-text="inputs.energyMode === 'appliances' ? 'Dihitung dari rincian ' + inputs.appliances.length + ' beban alat listrik.' : 'Dihitung dari input manual ' + (results?.energyKwh || 0) + ' kWh/hari.'"></div>
+              </div>
+
+              <!-- Estimasi Biaya Listrik PLN -->
+              <div class="p-2 bg-light rounded border mb-2 small">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-bold text-success">Estimasi Tagihan PLN:</span>
+                  <span class="badge bg-success" x-text="(inputs.billingDays || 30) + ' Hari'"></span>
+                </div>
+                <div>
+                  <strong>Biaya Harian:</strong>
+                  <span class="fw-bold text-dark" x-text="formatRupiah(results?.electricityCost?.totalCostDaily) + ' / hari'"></span>
+                </div>
+                <div>
+                  <strong>Biaya Bulanan:</strong>
+                  <span class="fw-bold text-primary" x-text="formatRupiah(results?.electricityCost?.totalCostMonthly) + ' / bln'"></span>
+                  <span class="text-muted" style="font-size: 0.74rem;" x-text="'(' + (results?.electricityCost?.monthlyKwh || 0) + ' kWh)'"></span>
+                </div>
+                <div class="text-muted mt-1" style="font-size: 0.72rem;">
+                  Dasar: <span x-text="'Rp ' + (inputs.tariffPerKwh || 1444.7) + '/kWh'"></span> + PPN <span x-text="(inputs.ppnPercent || 12) + '%'"></span> + PPJ <span x-text="(inputs.ppjPercent || 10) + '%'"></span>.
+                </div>
+              </div>
+
+              <!-- Atur Tarif & Pajak PLN Collapse -->
+              <div class="border-top pt-2 mt-2">
+                <button class="btn btn-sm btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#plnTariffCollapse" aria-expanded="false">
+                  <span class="small fw-semibold">⚙️ Atur Tarif & Pajak PLN</span>
+                  <span class="badge bg-light text-dark border">Ubah</span>
+                </button>
+                <div class="collapse mt-2" id="plnTariffCollapse">
+                  <div class="card card-body bg-light p-2 small border-0">
+                    <div class="row g-2">
+                      <div class="col-12">
+                        <label class="form-label mb-0 fw-semibold" for="tariffPerKwh">Tarif PLN (Rp/kWh)</label>
+                        <input type="number" step="0.1" min="0" class="form-control form-control-sm" id="tariffPerKwh"
+                               x-model.number="inputs.tariffPerKwh" @input="onTariffChange()">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="ppnPercent">PPN (%)</label>
+                        <input type="number" step="0.5" min="0" max="100" class="form-control form-control-sm" id="ppnPercent"
+                               x-model.number="inputs.ppnPercent" @input="onTariffChange()">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="ppjPercent">PPJ (%)</label>
+                        <input type="number" step="0.5" min="0" max="100" class="form-control form-control-sm" id="ppjPercent"
+                               x-model.number="inputs.ppjPercent" @input="onTariffChange()">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label mb-0 fw-semibold" for="billingDays">Hari Tagihan Bulanan</label>
+                        <select class="form-select form-select-sm" id="billingDays" x-model.number="inputs.billingDays" @change="onTariffChange()">
+                          <option :value="30">30 Hari</option>
+                          <option :value="31">31 Hari</option>
+                        </select>
+                      </div>
+                      <div class="col-12 mt-1">
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100 py-0" style="font-size: 0.75rem;" @click="resetTariffToDefault()">
+                          ↺ Reset Default (Tarif 1444.7, PPN 12%, PPJ 10%)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="small text-muted mb-0 mt-2">Basis perhitungan daya baterai dan array panel surya.</p>
             </div>
           </div>
         </div>
 
-        <div class="col-sm-6 col-lg-3">
-          <div class="card result-card border-warning">
-            <div class="card-body text-center">
-              <h3 class="h6 text-muted">Baterai</h3>
-              <p class="display-6 fw-bold" x-text="results?.batteryAh + ' Ah'"></p>
-              <p class="text-muted small mb-1" x-text="(results?.systemVoltage ?? '') + ' V · ≈ ' + (results?.batteryKwh ?? '') + ' kWh'"></p>
-              <p class="small mb-0">Rumus: (Wh÷V)÷DoD × Otonomi</p>
+        <!-- 3. BATERAI -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card result-card border-warning h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-warning text-dark" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Bank baterai penyimpan cadangan listrik saat malam atau tanpa matahari.">Tahap 3</span>
+                <small class="text-muted" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Depth of Discharge 80% menjaga umur sel baterai tetap panjang hingga 4000+ siklus."><span x-text="'LiFePO4 ' + (inputs?.systemVoltage || 48) + 'V (?)'"></span></small>
+              </div>
+              <h3 class="h5 card-title mb-1">Kapasitas Baterai</h3>
+              <p class="display-6 fw-bold text-warning mb-2" x-text="(results?.batteryAh || 0) + ' Ah'"></p>
+              <div class="p-2 bg-light rounded border mb-2 small">
+                <div><strong>Kapasitas Riil:</strong> <span class="fw-bold" x-text="(results?.batteryAh || 0) + ' Ah (' + (results?.batteryKwh || 0) + ' kWh)'"></span></div>
+                <div><strong>Kapasitas Dasar:</strong> <span x-text="(results?.batteryAhBase || 0) + ' Ah (DoD ' + (inputs?.dod || 80) + '%)'"></span></div>
+                <div class="mt-1 text-primary fw-bold" x-text="'Gunakan ' + (results?.batteryModules || 1) + ' unit modul ' + (inputs?.systemVoltage || 48) + 'V ' + (results?.moduleAh || 200) + 'Ah paralel (Total: ' + ((results?.batteryModules || 1) * (results?.moduleAh || 200)) + ' Ah)'"></div>
+                <div class="mt-1 text-muted" style="font-size: 0.74rem;">
+                  Min. Teknis Inverter: <strong class="text-dark" x-text="(results?.minBatteryAh || 200) + ' Ah'"></strong> <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Batas kapasitas baterai minimum sesuai spesifikasi teknis daya inverter agar BMS tidak trip saat lonjakan beban.">?</span>
+                </div>
+                <div class="mt-2 pt-1 border-top text-muted">
+                  <strong>Alternatif Charging (PLN/Genset):</strong>
+                  <span class="text-dark fw-semibold" x-text="'± ' + (results?.alternativeChargingHours || chargingHoursPreview) + ' jam'"></span> pengisian saat tanpa matahari.
+                </div>
+              </div>
+              <p class="small text-muted mb-0">Tipe Lithium LiFePO4 efisiensi tinggi untuk siklus harian 24 jam.</p>
             </div>
           </div>
         </div>
 
-        <div class="col-sm-6 col-lg-3">
-          <div class="card result-card border-danger">
-            <div class="card-body text-center">
-              <h3 class="h6 text-muted">SCC (MPPT)</h3>
-              <p class="display-6 fw-bold" x-text="results?.sccAmps + ' A'"></p>
-              <p class="text-muted small mb-1">Kapasitas minimal</p>
-              <p class="small mb-0">Rumus: Panel WP ÷ V</p>
+        <!-- 4. PANEL SURYA -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card result-card border-success h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-success" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Array panel surya penghasil energi dari cahaya matahari.">Tahap 4</span>
+                <small class="text-muted" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Kapasitas dihitung dengan margin rugi 30% (loss factor 1,3) agar produksi mencukupi saat musim hujan.">Solar PV Array (?)</small>
+              </div>
+              <h3 class="h5 card-title mb-1">Kebutuhan Panel</h3>
+              <p class="display-6 fw-bold text-success mb-1" x-text="(results?.panelCount || 0) + ' Lembar'"></p>
+              <div class="badge bg-light text-success border mb-2 text-truncate d-inline-block mw-100 fw-semibold" x-text="selectedPanelName"></div>
+              
+              <div class="p-2 bg-light rounded border mb-2 small">
+                <div><strong>Daya Rencana (Target):</strong> <span class="fw-bold text-dark" x-text="(results?.panelWp || 0) + ' Wp'"></span> (Dasar: <span x-text="(results?.panelWpBase || 0) + ' Wp'"></span>)</div>
+                <div class="text-success fw-bold mt-1">
+                  Total Aktual Terpasang: <span x-text="(results?.panelTotalActualWp || 0) + ' Wp (' + (Math.round((results?.panelTotalActualWp || 0) / 100) / 10) + ' kWp)'"></span>
+                </div>
+                <div class="text-muted" style="font-size: 0.75rem;">
+                  (<span x-text="results?.panelCount || 0"></span> panel &times; <span x-text="inputs?.wpPerPanel || 550"></span> Wp)
+                </div>
+                <div class="mt-1 text-muted" style="font-size: 0.74rem;">
+                  Min. Teknis MPPT Startup: <strong class="text-dark" x-text="(results?.minPanelsForMppt || 2) + ' modul seri'"></strong> <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Jumlah minimal panel dalam 1 string seri agar tegangan Vmp mencapai batas bawah startup MPPT inverter.">?</span>
+                </div>
+              </div>
+
+              <!-- Spesifikasi Teknis Per Modul Panel -->
+              <div class="border-top pt-2 mt-2">
+                <button class="btn btn-sm btn-outline-success w-100 text-start d-flex justify-content-between align-items-center"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#panelSpecsCollapse" aria-expanded="false">
+                  <span class="small fw-semibold">⚙️ Spesifikasi & Pilihan Panel</span>
+                  <span class="badge bg-light text-dark border">Ubah Spek</span>
+                </button>
+                <div class="collapse mt-2" id="panelSpecsCollapse">
+                  <div class="card card-body bg-light p-2 small border-0">
+                    <div class="row g-2">
+                      <div class="col-12 mb-1">
+                        <label class="form-label mb-0 fw-semibold" for="resPanelSelect">Pilih Tipe Panel</label>
+                        <select class="form-select form-select-sm" id="resPanelSelect" x-model="inputs.selectedPanelId" @change="onPanelSelect($event.target.value)">
+                          <template x-for="p in panels" :key="p.id">
+                            <option :value="p.id" x-text="p.name + ' (' + p.wp + ' Wp)'"></option>
+                          </template>
+                          <option value="custom">Kustom / Input Manual...</option>
+                        </select>
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="resPanelWp">Daya Panel (Wp)</label>
+                        <input type="number" min="100" max="1000" step="5" class="form-control form-control-sm" id="resPanelWp"
+                               x-model.number="inputs.wpPerPanel" @input="onManualPanelSpecInput()">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="resPanelVmp">Tegangan Vmp (V)</label>
+                        <input type="number" min="10" max="100" step="0.1" class="form-control form-control-sm" id="resPanelVmp"
+                               x-model.number="inputs.panelVmp" @input="onManualPanelSpecInput()">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="resPanelVoc">Tegangan Voc (V)</label>
+                        <input type="number" min="15" max="120" step="0.1" class="form-control form-control-sm" id="resPanelVoc"
+                               x-model.number="inputs.panelVoc" @input="onManualPanelSpecInput()">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="resPanelImp">Arus Kerja Imp (A)</label>
+                        <input type="number" min="1" max="40" step="0.01" class="form-control form-control-sm" id="resPanelImp"
+                               x-model.number="inputs.panelImp" @input="onManualPanelSpecInput()">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label mb-0 fw-semibold" for="resPanelIsc">Arus Hubung Singkat Isc (A)</label>
+                        <input type="number" min="1" max="50" step="0.01" class="form-control form-control-sm" id="resPanelIsc"
+                               x-model.number="inputs.panelIsc" @input="onManualPanelSpecInput()">
+                      </div>
+                      <div class="col-12 mt-1">
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100 py-0" style="font-size: 0.75rem;" @click="resetPanelSpecsToDefault()">
+                          ↺ Reset ke Default SOLANA (550 Wp)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. KONFIGURASI STRING -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card result-card border-info h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-info text-dark" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Kombinasi koneksi panel Seri (S) dan Paralel (P).">Tahap 5</span>
+                <small class="text-muted" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Tegangan seri Vmp dan arus paralel Imp disinkronkan dengan jendela MPPT inverter.">String Sizing (?)</small>
+              </div>
+              <h3 class="h5 card-title mb-1">Konfigurasi Panel</h3>
+              <p class="display-6 fw-bold text-info mb-2" x-text="(results?.stringConfig?.series || 0) + 'S ' + (results?.stringConfig?.parallel || 0) + 'P'"></p>
+              
+              <!-- Pemilih Jumlah MPPT Inverter -->
+              <div class="p-2 mb-2 bg-light rounded border small">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-semibold">Tracker MPPT Inverter:</span>
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Jumlah MPPT">
+                    <button type="button" class="btn btn-sm py-0 px-2"
+                            :class="(inputs.mpptCount || 1) === 1 ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'"
+                            @click="setMpptCount(1)">1 MPPT (Default)</button>
+                    <button type="button" class="btn btn-sm py-0 px-2"
+                            :class="(inputs.mpptCount || 1) === 2 ? 'btn-info text-dark fw-bold' : 'btn-outline-secondary'"
+                            @click="setMpptCount(2)">2 MPPT</button>
+                  </div>
+                </div>
+                <div class="text-muted" style="font-size: 0.72rem;" x-text="mpptDistributionSummary"></div>
+              </div>
+
+              <div class="p-2 bg-light rounded border mb-2 small">
+                <div class="mb-2 pb-1 border-bottom d-flex justify-content-between align-items-center">
+                  <span><strong>Susunan:</strong> <span class="fw-bold" x-text="(results?.stringConfig?.parallel || 0) + 'P × ' + (results?.stringConfig?.series || 0) + 'S (' + (results?.stringConfig?.parallel || 0) + ' paralel, ' + (results?.stringConfig?.series || 0) + ' seri)'"></span></span>
+                  <span class="text-muted" style="font-size: 0.72rem;" x-text="(results?.panelCount || 0) + ' modul (' + (results?.panelTotalActualWp || 0) + ' Wp)'"></span>
+                </div>
+
+                <!-- Tabel Komparasi Spek String vs Input MPPT Inverter -->
+                <div class="table-responsive mb-1">
+                  <table class="table table-sm table-bordered bg-white mb-0 text-center align-middle" style="font-size: 0.74rem;">
+                    <thead class="table-light">
+                      <tr>
+                        <th class="text-start py-1">Parameter</th>
+                        <th class="py-1 text-primary">Rangkaian PV</th>
+                        <th class="py-1 text-dark">Spek MPPT Inverter</th>
+                        <th class="py-1">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Tegangan Kerja Vmp vs Min V MPPT -->
+                      <tr>
+                        <td class="text-start py-1">
+                          <strong>Vmp (Kerja)</strong>
+                          <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Vmp string wajib berada di atas tegangan startup / min MPPT inverter.">?</span>
+                        </td>
+                        <td class="fw-bold text-primary py-1" x-text="(results?.stringConfig?.totalVmp || 0) + ' V'"></td>
+                        <td class="text-muted py-1" x-text="'Min ≥ ' + (inputs?.mpptMinVoltage || 60) + ' V'"></td>
+                        <td class="py-1">
+                          <template x-if="(results?.stringConfig?.totalVmp || 0) >= (inputs?.mpptMinVoltage || 60)">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-1">✓ Lolos</span>
+                          </template>
+                          <template x-if="(results?.stringConfig?.totalVmp || 0) < (inputs?.mpptMinVoltage || 60)">
+                            <span class="badge bg-warning-subtle text-danger border border-warning-subtle px-1">✕ Kurang</span>
+                          </template>
+                        </td>
+                      </tr>
+
+                      <!-- Tegangan Terbuka Voc vs Max V MPPT -->
+                      <tr>
+                        <td class="text-start py-1">
+                          <strong>Voc (Maks)</strong>
+                          <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Voc string saat tanpa beban TIDAK BOLEH melebihi batas maksimal tegangan MPPT inverter.">?</span>
+                        </td>
+                        <td class="fw-bold text-primary py-1" x-text="(results?.stringConfig?.totalVoc || 0) + ' V'"></td>
+                        <td class="text-muted py-1" x-text="'Maks ≤ ' + (inputs?.mpptMaxVoltage || 245) + ' V'"></td>
+                        <td class="py-1">
+                          <template x-if="(results?.stringConfig?.totalVoc || 0) <= (inputs?.mpptMaxVoltage || 245)">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-1">✓ Aman</span>
+                          </template>
+                          <template x-if="(results?.stringConfig?.totalVoc || 0) > (inputs?.mpptMaxVoltage || 245)">
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-1">✕ Bahaya</span>
+                          </template>
+                        </td>
+                      </tr>
+
+                      <!-- Arus Masuk PV per MPPT vs Max Current MPPT -->
+                      <tr>
+                        <td class="text-start py-1">
+                          <strong>Arus per MPPT</strong>
+                          <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Arus total paralel masuk ke tracker MPPT inverter. Wajib di bawah batas arus maksimal MPPT.">?</span>
+                        </td>
+                        <td class="fw-bold text-primary py-1" x-text="(results?.stringConfig?.currentPerMppt || 0) + ' A'"></td>
+                        <td class="text-muted py-1" x-text="'Maks ≤ ' + (inputs?.mpptMaxCurrent || 100) + ' A'"></td>
+                        <td class="py-1">
+                          <template x-if="(results?.stringConfig?.currentPerMppt || 0) <= (inputs?.mpptMaxCurrent || 100)">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-1">✓ Aman</span>
+                          </template>
+                          <template x-if="(results?.stringConfig?.currentPerMppt || 0) > (inputs?.mpptMaxCurrent || 100)">
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-1">✕ Berlebih</span>
+                          </template>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="mt-2 pt-1 border-top">
+                  <template x-if="results?.stringConfig?.mpptVoltageStatus === 'safe' && results?.stringConfig?.mpptCurrentStatus === 'safe'">
+                    <span class="badge bg-success w-100 py-1">✓ Konfigurasi Sesuai & Aman dengan MPPT Inverter</span>
+                  </template>
+                  <template x-if="results?.stringConfig?.mpptVoltageStatus === 'under'">
+                    <span class="badge bg-warning text-dark w-100 py-1" x-text="results?.stringConfig?.warnings[0] || 'Vmp di bawah startup MPPT'"></span>
+                  </template>
+                  <template x-if="results?.stringConfig?.mpptVoltageStatus === 'over'">
+                    <span class="badge bg-danger w-100 py-1" x-text="results?.stringConfig?.warnings[0] || 'Voc melebihi batas MPPT'"></span>
+                  </template>
+                  <template x-if="results?.stringConfig?.mpptCurrentStatus === 'over' && results?.stringConfig?.mpptVoltageStatus === 'safe'">
+                    <span class="badge bg-danger w-100 py-1" x-text="results?.stringConfig?.warnings[0] || 'Arus input melebihi batas MPPT'"></span>
+                  </template>
+                </div>
+              </div>
+
+              <!-- DIAGRAM DINAMIS RANGKAIAN PANEL -->
+              <div class="mt-3 border-top pt-2">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <strong class="small text-dark" style="font-size: 0.78rem;">📐 Diagram Visual Rangkaian:</strong>
+                  <span class="badge bg-info text-dark" style="font-size: 0.7rem;" x-text="(results?.stringConfig?.series || 0) + ' Seri · ' + (results?.stringConfig?.parallel || 0) + ' Paralel'"></span>
+                </div>
+                
+                <div class="pv-diagram-container">
+                  <div class="pv-diagram-scroll">
+                    <template x-for="p in stringParallelArray" :key="p">
+                      <div class="pv-string-block">
+                        <div class="pv-string-header">
+                          <span x-text="'String ' + p + ' (' + (results?.stringConfig?.series || 0) + ' Seri) &rarr; Port MPPT ' + getMpptTrackerForString(p)"></span>
+                          <span class="text-primary" x-text="(results?.stringConfig?.totalVmp || 0) + 'V · ' + (inputs?.panelImp || 13) + 'A'"></span>
+                        </div>
+                        <div class="pv-panels-row">
+                          <template x-for="s in stringSeriesArray" :key="s">
+                            <div class="d-flex align-items-center">
+                              <div class="pv-panel-module">
+                                <span class="badge bg-danger position-absolute top-0 start-0 p-0 px-1" style="font-size: 0.45rem; line-height: 1;">+</span>
+                                <span class="badge bg-primary position-absolute top-0 end-0 p-0 px-1" style="font-size: 0.45rem; line-height: 1;">-</span>
+                                <div style="font-size: 0.62rem; font-weight: bold;" x-text="'PV ' + s"></div>
+                                <div style="font-size: 0.52rem; opacity: 0.9;" x-text="(inputs?.wpPerPanel || 550) + 'W'"></div>
+                                <div style="font-size: 0.52rem; opacity: 0.9;" x-text="(inputs?.panelVmp || 42) + 'V'"></div>
+                              </div>
+                              <div class="pv-wire-arrow" x-show="s < (results?.stringConfig?.series || 0)">&rarr;</div>
+                            </div>
+                          </template>
+                          <div class="pv-combiner-box">
+                            <span style="font-size: 0.58rem; color: #64748b;" x-text="'Ke MPPT ' + getMpptTrackerForString(p)"></span>
+                            <span class="text-primary fw-bold" style="font-size: 0.65rem;" x-text="(results?.stringConfig?.totalVmp || 0) + 'V'"></span>
+                            <span class="text-dark" style="font-size: 0.6rem;" x-text="(inputs?.panelImp || 13) + 'A'"></span>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                  
+                  <!-- Ringkasan Jalur MPPT -->
+                  <div class="p-1 px-2 mt-1 bg-white rounded border d-flex justify-content-between align-items-center"
+                       x-show="(inputs.mpptCount || 1) === 1 && (results?.stringConfig?.parallel || 1) > 1">
+                    <span class="text-muted" style="font-size: 0.7rem;">⚡ Masuk MPPT 1:</span>
+                    <span class="fw-bold text-success" style="font-size: 0.72rem;"
+                          x-text="(results?.stringConfig?.totalVmp || 0) + 'V · ' + (results?.stringConfig?.totalImp || 0) + 'A (' + (results?.stringConfig?.parallel || 1) + ' String Paralel via Combiner)'"></span>
+                  </div>
+                  <div class="p-1 px-2 mt-1 bg-white rounded border d-flex justify-content-between align-items-center"
+                       x-show="(inputs.mpptCount || 1) === 1 && (results?.stringConfig?.parallel || 1) === 1">
+                    <span class="text-muted" style="font-size: 0.7rem;">⚡ Masuk MPPT 1:</span>
+                    <span class="fw-bold text-success" style="font-size: 0.72rem;"
+                          x-text="(results?.stringConfig?.totalVmp || 0) + 'V · ' + (results?.stringConfig?.totalImp || 0) + 'A (String Tunggal)'"></span>
+                  </div>
+                  <div class="p-1 px-2 mt-1 bg-white rounded border d-flex justify-content-between align-items-center"
+                       x-show="(inputs.mpptCount || 1) > 1">
+                    <span class="text-muted" style="font-size: 0.7rem;">⚡ Multi-Tracker:</span>
+                    <span class="fw-bold text-success" style="font-size: 0.72rem;"
+                          x-text="'Beban terbagi mandiri ke ' + (inputs.mpptCount || 2) + ' MPPT (' + (results?.stringConfig?.currentPerMppt || 13) + 'A per port)'"></span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. KABEL & PENGAMAN MCB -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card result-card border-danger h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-danger" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Ukuran pengaman arus dan penampang kabel standar PUIL / NEC.">Tahap 6</span>
+                <small class="text-muted" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Safety factor 1,25x arus continuous guna mencegah kabel panas berlebih atau terbakar.">Safety Factor 1,25 (?)</small>
+              </div>
+              <h3 class="h5 card-title mb-1">Kabel & MCB DC</h3>
+              <div class="p-2 bg-light rounded border mb-2 small">
+                <div class="fw-bold text-danger mb-1">Jalur Panel Surya (PV):</div>
+                <div>Arus Desain: <span x-text="(results?.wiring?.pv?.stringDesignCurrent || 0) + ' A'"></span></div>
+                <div>MCB DC: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringMcbAmps || 0) + ' Ampere'"></strong></div>
+                <div>Kabel Minimal: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringCableMm2 || 6) + ' mm² (Solar Cable)'"></strong></div>
+                
+                <hr class="my-1">
+                
+                <div class="fw-bold text-danger mb-1">Jalur Baterai:</div>
+                <div>Arus Desain: <span x-text="(results?.wiring?.battery?.designCurrent || 0) + ' A'"></span></div>
+                <div>MCB DC: <strong class="text-dark" x-text="(results?.wiring?.battery?.mcbAmps || 0) + ' Ampere'"></strong></div>
+                <div>Kabel Minimal: <strong class="text-dark" x-text="(results?.wiring?.battery?.cableMm2 || 25) + ' mm² (Serabut NYAF)'"></strong></div>
+              </div>
+              <p class="small text-muted mb-0">Standar keamanan instalasi DC untuk mencegah panas berlebih.</p>
             </div>
           </div>
         </div>
@@ -156,37 +752,74 @@
       </div>
     </section>
 
-    <!-- ===== HISTORY ===== -->
+    <!-- ===== RIWAYAT PERHITUNGAN ===== -->
     <section id="riwayat" class="mb-4">
-      <h2 class="h4 mb-3">Riwayat Perhitungan</h2>
-      <div x-show="history.length === 0" class="text-muted">Belum ada riwayat perhitungan.</div>
-      <div class="list-group" x-show="history.length > 0">
-        <template x-for="item in history" :key="item.id">
-          <div class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-              <div class="fw-semibold" x-text="formatDate(item.timestamp)"></div>
-              <div class="small text-muted"
-                   x-text="item.input.energyKwh + ' kWh/hari · ' + item.output.panelWp + ' WP · ' + item.output.batteryAh + ' Ah'"></div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0 fw-bold">Riwayat Perhitungan Tersimpan</h2>
+        <div x-show="history.length > 0">
+          <button type="button" class="btn btn-sm btn-outline-danger" @click="clearAllHistory()">
+            Hapus Semua
+          </button>
+        </div>
+      </div>
+
+      <div x-show="history.length === 0" class="text-muted small p-3 bg-light rounded border text-center">
+        Belum ada riwayat perhitungan.
+      </div>
+
+      <div x-show="history.length > 0">
+        <div class="list-group shadow-sm mb-3">
+          <template x-for="item in paginatedHistory" :key="item.id">
+            <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="badge bg-secondary text-white" style="font-size: 0.72rem;" x-text="formatDate(item.timestamp)"></span>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.7rem;"
+                        x-text="(item.output?.panelCount || '-') + ' Panel (' + (item.output?.stringConfig?.series || '-') + 'S ' + (item.output?.stringConfig?.parallel || '-') + 'P)'"></span>
+                </div>
+                <div class="small text-muted"
+                     x-text="(item.output?.peakPowerWatts || item.input?.peakPower || ((item.input?.powerVa || 1300) * 0.8) || 1040) + ' W · ' + (item.output?.energyKwh || item.input?.energyKwh || 20) + ' kWh/hari · Inverter ' + (item.output?.inverterRatedWatts || 5000) + ' W · Baterai ' + (item.output?.batteryAh || '-') + ' Ah'"></div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="restoreInput(item)">Buka</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" @click="removeHistory(item.id)">Hapus</button>
+              </div>
             </div>
-            <div class="d-flex gap-2">
-              <button type="button" class="btn btn-sm btn-outline-primary" @click="restoreInput(item)">Buka</button>
-              <button type="button" class="btn btn-sm btn-outline-danger" @click="removeHistory(item.id)">Hapus</button>
-            </div>
-          </div>
-        </template>
+          </template>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" x-show="totalHistoryPages > 1">
+          <small class="text-muted" x-text="'Menampilkan halaman ' + historyPage + ' dari ' + totalHistoryPages + ' (Total ' + history.length + ' riwayat)'"></small>
+          
+          <nav aria-label="Navigasi Riwayat">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" :class="{ disabled: historyPage <= 1 }">
+                <button class="page-link" type="button" @click="prevHistoryPage()" :disabled="historyPage <= 1">&laquo; Sebelumnya</button>
+              </li>
+              <template x-for="pageNum in historyPageNumbers" :key="pageNum">
+                <li class="page-item" :class="{ active: historyPage === pageNum }">
+                  <button class="page-link" type="button" @click="goToHistoryPage(pageNum)" x-text="pageNum"></button>
+                </li>
+              </template>
+              <li class="page-item" :class="{ disabled: historyPage >= totalHistoryPages }">
+                <button class="page-link" type="button" @click="nextHistoryPage()" :disabled="historyPage >= totalHistoryPages">Berikutnya &raquo;</button>
+              </li>
+            </ul>
+          </nav>
+        </div>
       </div>
     </section>
 
-    <footer class="text-muted small">
-      Hasil adalah estimasi minimum aman. Konsultasikan dengan teknisi untuk instalasi nyata.
+    <footer class="text-muted small border-top pt-3 text-center">
+      Kalkulator PLTS Off-Grid 24 Jam &copy; 2026. Hasil perhitungan adalah acuan teknis minimum aman berdasarkan kaidah standar instalasi PLTS.
     </footer>
 
   </div>
 
   <!-- Scripts -->
-  <script type="module" src="js/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="js/app.js?v=2.5.1"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@4.0.0/dist/htmx.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@4.0.0/dist/ext/hx-alpine-compat.min.js"></script>
 </body>
 </html>

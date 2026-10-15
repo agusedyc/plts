@@ -15,121 +15,130 @@
 | 1.1.0 | 2026-10-13 | Perbaikan akurasi rumus, penambahan asumsi & glosarium, penjelasan keputusan teknis, penambahan acceptance criteria & contoh perhitungan |
 | 1.2.0 | 2026-10-13 | Penetapan stack teknis: HTMX v4 + Alpine.js + Bootstrap, penambahan database lokal (IndexedDB) untuk riwayat & preferensi |
 | 1.3.0 | 2026-10-13 | Penambahan deployment Docker dengan webserver Caddy agar aplikasi dapat dijalankan secara remote |
+| 2.0.0 | 2026-10-13 | Pembaruan 6 tahap perancangan teknis PLTS (Inverter VA→W, Energi Realistis/Daftar Alat 24 Jam, LiFePO4 48V modul unit, PV aman hujan, Konfigurasi String Seri/Paralel, serta Pengaman MCB & Kabel DC) |
 
 ---
 
 ## 1. Ringkasan Eksekutif (Executive Summary)
 
-Aplikasi web **kalkulator PLTS** membantu pemilik rumah, teknisi, atau peminat energi terbarukan menghitung spesifikasi komponen **PLTS Off-Grid** (Inverter, Panel Surya, Baterai, dan Solar Charge Controller/SCC) berdasarkan kebutuhan energi harian pengguna. Studi kasus acuan: rumah berdaya 5500 VA yang menyala 24 jam penuh hanya dari tenaga surya.
+Aplikasi web **kalkulator PLTS** membantu pemilik rumah, teknisi, atau peminat energi terbarukan merancang spesifikasi lengkap **PLTS Off-Grid 24 Jam Nonstop** (Inverter, Panel Surya, Konfigurasi String, Baterai LiFePO4 48V, serta Ukuran Kabel & MCB DC) berdasarkan kebutuhan energi harian. Studi kasus acuan: sistem rumah PLN 1300 VA dan 5500 VA yang menyala 24 jam penuh dari tenaga surya.
 
-Aplikasi ini **purely client-side** (tanpa backend/logika server): seluruh perhitungan dan rendering dilakukan di browser menggunakan JavaScript (HTMX v4 + Alpine.js). Pendekatan ini menjamin respons instan. Data pengguna (riwayat perhitungan & preferensi input) disimpan **lokal di browser** melalui IndexedDB. Aplikasi dikemas sebagai **container Docker** dengan webserver ringan **Caddy** agar dapat dijalankan dan diakses secara **remote**.
+Aplikasi ini **purely client-side** (tanpa backend/logika server): seluruh perhitungan dan rendering dilakukan di browser menggunakan JavaScript (Alpine.js + Bootstrap 5). Data pengguna (riwayat perhitungan & preferensi input) disimpan **lokal di browser** melalui IndexedDB. Aplikasi dikemas sebagai **container Docker** dengan webserver ringan **Caddy** agar dapat dijalankan dan diakses secara **remote**.
 
 ## 2. Tujuan Produk (Objectives)
 
-1. Mempermudah perhitungan teknis PLTS menjadi proses sekali klik.
+1. Mempermudah perhitungan teknis PLTS menjadi alur 6 tahap yang terstruktur.
 2. Memberikan estimasi yang akurat agar pengguna tidak salah memilih kapasitas alat (*under-sizing* maupun *over-sizing*).
-3. Menyediakan antarmuka yang bersih, cepat, dan responsif tanpa *page reload*.
-4. Mengedukasi pengguna melalui *tooltip*/penjelasan singkat pada setiap parameter.
+3. Menyediakan simulasi rincian beban per alat listrik dan perhitungan realistis 24 jam.
+4. Memberikan rekomendasi konfigurasi string MPPT, MCB DC, dan ukuran penampang kabel demi keselamatan instalasi.
+5. Menyediakan antarmuka yang bersih, cepat, dan responsif tanpa *page reload*.
 
 ## 3. Target Pengguna (Target Audience)
 
 | Segmen | Kebutuhan |
 |--------|-----------|
-| Masyarakat awam yang merancang PLTS rumah | Hasil mudah dipahami, minimal istilah teknis, penjelasan tiap parameter |
-| Teknisi / instalatur PLTS di lapangan | Input cepat, hasil akurat, tampilan ramah layar HP, validasi input ketat |
+| Masyarakat awam yang merancang PLTS rumah | Alur jelas 6 tahap, hasil mudah dipahami, minimal istilah rumit |
+| Teknisi / instalatur PLTS di lapangan | Konfigurasi string seri-paralel, rating MCB DC, ukuran kabel mm², validasi input ketat |
 
 ## 4. Ruang Lingkup (Scope)
 
-### 4.1 In-Scope (Versi 1.0)
-- Form input parameter inti (daya terpasang, energi harian, SPH, tegangan sistem, DoD).
-- Perhitungan dan tampilan 4 output utama: Inverter, Panel Surya (total WP + estimasi jumlah lembar), Baterai (Ah), SCC (A).
-- Validasi input, *tooltip* penjelasan, dan opsi perhitungan estimasi energi.
-- Desain responsif mobile-first, berbahasa Indonesia.
-- Penyimpanan lokal (IndexedDB): **riwayat perhitungan** dan **preferensi input**.
-- Deployment **Docker + Caddy** agar aplikasi dapat dijalankan secara remote.
-
-### 4.2 Out-of-Scope (Versi 1.0)
-- Perhitungan beban per alat (kulkas, AC, lampu) → rencana V2.0.
-- Estimasi harga komponen dalam Rupiah → rencana V3.0.
-- Export hasil ke PDF → rencana V4.0.
-- Dukungan PLTS **On-Grid** / *grid-tie* (fokus off-grid).
-- *Backend* / penyimpanan data pengguna.
+### 4.1 In-Scope (Versi 2.0)
+- Input daya via VA (PLN) atau Watt langsung (berfungsi untuk sizing inverter serta referensi charging alternatif baterai via PLN/Genset).
+- 2 metode perhitungan energi harian: Rincian tabel per alat (nama, watt, jam, qty) atau Manual kWh.
+- Estimasi durasi charging alternatif (PLN/Genset) saat tanpa sinar matahari.
+- 6 output rancangan lengkap:
+  1. Inverter: Daya nyata (W) & rekomendasi kelas pasar (3 kW – 5 kW pada 48V).
+  2. Energi Harian (Wh & kWh).
+  3. Baterai LiFePO4 48V: Kapasitas dasar (Ah), riil (Ah, DoD 80%), kWh, & jumlah modul paralel (modul 200Ah/100Ah).
+  4. Panel Surya: PV dasar, PV + rugi 20%, total aktual aman musim hujan, jumlah lembar panel 550 Wp.
+  5. Konfigurasi String Panel: Jumlah string paralel & panel seri (contoh 6S 2P), total Vmp, total Imp.
+  6. Pengaman & Kabel (SF 1.25): MCB DC & penampang kabel jalur PV dan jalur Baterai.
+- Penyimpanan lokal (IndexedDB): riwayat perhitungan dan preferensi input.
+- Deployment Docker + Caddy.
 
 ---
 
-## 5. Fitur dan Logika Perhitungan
+## 5. Fitur dan Logika Perhitungan (6 Tahapan Teknis)
 
-### 5.1 Form Input Pengguna
+### 5.1 Tahap 1: Target Sistem & Daya Inverter
+- **Konversi Daya Nyata:**
+  `Daya Nyata (W) = Daya Semu PLN (VA) × Faktor Daya (0,8)`
+  (Contoh PLN 1300 VA: 1300 × 0,8 = 1040 Watt).
+- **Sistem Tegangan Baterai:** Default **48 Volt** (menjaga arus tetap rendah dan aman untuk beban > 1 kW).
+- **Rekomendasi Kapasitas Inverter:**
+  Untuk beban 1040 W pada sistem 48V, disarankan inverter kelas **3 kW hingga 5 kW** untuk mengantisipasi *surge current* lonjakan motor/kompresor.
 
-| # | Parameter | Satuan | Rentang / Default | Wajib | Keterangan |
-|---|-----------|--------|-------------------|-------|------------|
-| 1 | **Daya terpasang / beban puncak** | Watt (W) | > 0; contoh 5500 | Ya | Beban maksimum yang mungkin ditarik bersamaan. Dipakai untuk sizing inverter. |
-| 2 | **Total pemakaian energi harian** | kWh | > 0; contoh 30 | Ya | Total konsumsi listrik 24 jam. Diterima dalam kWh (dikonversi ke Wh di internal). Opsi bantu: "beban rata-rata × 24 jam". |
-| 3 | **Jam efektif matahari (SPH)** | jam | 1–10; default 4–5 | Ya | Lama penyinaran matahari optimal per hari. Default Indonesia 4–5 jam. |
-| 4 | **Tegangan sistem** | V | 12 / 24 / 48 | Ya | Tegangan DC baterai & inverter. Saran: 48V untuk sistem > 3000W. |
-| 5 | **Depth of Discharge (DoD)** | % | 20–90; default tergantung jenis baterai | Ya | Batas maksimum baterai dikuras. Default: 80% (Lithium/LiFePO4), 50% (VRLA/Aki). |
-| 6 | **Hari otonomi (optional)** | hari | 1–5; default 1 | Tidak | Cadangan hari saat matahari redup / mendung. Default 1 (tanpa cadangan ekstra). |
-| 7 | **Jenis baterai** | - | Lithium / VRLA | Ya (opsional) | Menentukan default DoD secara otomatis. |
-| 8 | **Watt peak per lembar panel** | WP | > 0; default 550 | Tidak | Digunakan untuk menghitung estimasi jumlah lembar panel. |
+### 5.2 Tahap 2: Kebutuhan Energi Harian (24 Jam)
+Disediakan 2 metode perhitungan:
+1. **Rincian Beban Per Alat:**
+   `Total Energi (Wh) = ∑ (Daya Alat [W] × Durasi Nyala [Jam] × Jumlah Alat)`
+2. **Input Manual kWh:** Input langsung angka kWh harian (otomatis tersinkron dari rincian alat).
 
-> **Catatan asumsi unit:** Energi harian diterima dalam **kWh** (bukan Wh) untuk mengurangi risiko salah input angka nol; sistem mengonversi ke Wh untuk perhitungan. Ini merupakan perbaikan dari versi 1.0.0 yang mencampur Wh dan kWh.
+### 5.3 Tahap 3: Kapasitas Baterai (LiFePO4 48V)
+- Tipe baterai default: **Lithium LiFePO4** dengan Depth of Discharge (DoD) **80%**.
+- **Kapasitas Dasar (Ah):**
+  `Kapasitas Dasar (Ah) = Energi Harian (Wh) / Tegangan Sistem (48V)`
+  (Contoh: 20.000 Wh / 48V = 416,7 Ah).
+- **Kapasitas Riil (Ah):**
+  `Kapasitas Riil (Ah) = Kapasitas Dasar (Ah) / DoD (0,8)`
+  (Contoh: 416,7 Ah / 0,8 = 520,8 Ah ≈ 521 Ah).
+- **Jumlah Unit Modul Baterai:**
+  `Jumlah Unit = ⌈Kapasitas Riil / Kapasitas Modul⌉`
+  (Menggunakan modul 48V 200Ah: 521 / 200 = 2,6 → **3 unit 48V 200Ah** diparalel = total 600 Ah).
 
-### 5.2 Logika Perhitungan
+### 5.4 Tahap 4: Kebutuhan Panel Surya (PV)
+- **Peak Sun Hour (PSH):** Default **4,5 jam/hari** (rata-rata Indonesia).
+- **Kebutuhan PV Dasar (Wp):**
+  `PV Dasar (Wp) = Energi Harian (Wh) / PSH (4,5 jam)`
+  (Contoh: 20.000 Wh / 4,5 jam = 4.444 Wp).
+- **Faktor Rugi (Loss Factor):** Ditambahkan rugi 20% (faktor 1,2):
+  `PV Total (Wp) = PV Dasar (Wp) × 1,2`
+  (Contoh: 4.444 Wp × 1,2 = 5.333 Wp).
+- **Cadangan Musim Hujan & Jumlah Lembar:**
+  Digenapkan menjadi 6 kWp agar tetap andal saat cuaca mendung. Dengan modul 550 Wp:
+  `Jumlah Panel = ⌈6.000 Wp / 550 Wp⌉ = 10,9 → 12 lembar` (Total aktual: 6.600 Wp / 6,6 kWp).
 
-Semua perhitungan dilakukan **di sisi klien** (JavaScript) dan menghasilkan angka yang dibulatkan ke atas (ceiling) ke nilai aman.
+### 5.5 Tahap 5: Konfigurasi Seri & Paralel Panel (String Sizing)
+- Karakteristik panel 550 Wp: Vmp = 42V, Imp = 13A.
+- Penyesuaian rentang MPPT tegangan tinggi (150V–450V):
+  Susunan: **6S 2P** (2 string paralel, tiap string 6 panel seri).
+  - Tegangan array total: `6 × 42V = 252 Volt` (Vmp).
+  - Arus array total: `2 × 13A = 26 Ampere` (Imp).
 
-#### a. Kapasitas Inverter (Watt)
+### 5.6 Tahap 6: Ukuran Kabel dan Pengaman (MCB DC)
+Berdasarkan batas aman (Safety Factor / SF = 1,25):
+- **Jalur PV (Panel ke SCC):**
+  - Arus desain: `13A × 1,25 = 16,25A`.
+  - MCB DC: **20 Ampere**.
+  - Kabel minimal: **6 mm²** (Solar DC Cable).
+- **Jalur Baterai (Baterai ke Inverter/SCC):**
+  - Daya beban penuh misal 4.000 W pada 48V: arus 83,3A (toleransi 90A).
+  - Arus desain: `90A × 1,25 = 112,5A`.
+  - MCB DC: **125 Ampere**.
+  - Kabel minimal: **25 mm²** (Kabel tembaga serabut NYAF).
 
-```
-Inverter (W) = Beban Puncak (W) × Safety Factor
-```
+---
 
-- `Safety Factor` default **1.2** (20% cadangan untuk lonjakan arus start motor/kompresor).
-- **Prinsip:** Inverter di-size berdasarkan **daya puncak (W)**, bukan energi harian (Wh). Beban puncak bersumber dari input #1.
-- Contoh: 5500 W × 1.2 = 6600 W → rekomendasi "minimal 6600 W, pilih kelas 6000–8000 W".
+## 6. Contoh Kasus Terpadu: PLTS Rumah 1300 VA (Benchmark Jago Listrik)
 
-#### b. Kebutuhan Panel Surya (Watt Peak / WP)
+**Input:**
+- Daya PLN: 1300 VA (Daya nyata 1040 W)
+- Durasi: 24 Jam Nonstop Off-Grid
+- Pemakaian: Rata-rata 80% (19.968 Wh ≈ 20 kWh/hari)
+- Tegangan Sistem: 48V
+- Baterai: LiFePO4 (DoD 80%), modul 200 Ah
+- PSH: 4,5 jam
+- Panel: 550 Wp
 
-```
-Panel Total (WP) = (Energi Harian (Wh) / SPH (jam)) × Loss Factor
-```
-
-- `Loss Factor` default **1.3** (mengompensasi efisiensi inverter, rugi kabel, suhu, debu, dan mismatch modul). Rentang umum 1.25–1.3.
-- **Jumlah lembar panel:** `Panel Total (WP) / WP per lembar`, dibulatkan ke atas.
-- Contoh (Energi 30000 Wh, SPH 4): (30000 / 4) × 1.3 = **9750 WP** → dengan panel 550 WP ≈ **18 lembar**.
-
-#### c. Kebutuhan Kapasitas Baterai (Ah)
-
-```
-Baterai (Ah) = (Energi Harian (Wh) / Tegangan Sistem (V)) / DoD × Hari Otonomi
-```
-
-- **Prinsip:** kapasitas terpakai (usable) baterai harus ≥ kebutuhan energi harian. Karena baterai hanya boleh dikuras sebesar DoD, kapasitas fisik dihitung dengan membagi kebutuhan dengan DoD.
-- Contoh (30000 Wh, 48V, DoD 80%, otonomi 1): (30000 / 48) / 0.8 × 1 = **781.25 Ah → 782 Ah**.
-- `Hari Otonomi > 1` menambah cadangan hari mendung (opsional, default 1).
-
-#### d. Kebutuhan Solar Charge Controller (SCC) (Ampere)
-
-```
-SCC (A) = Panel Total (WP) / Tegangan Sistem (V)
-```
-
-- **Asumsi:** metode **MPPT** (Maximum Power Point Tracking), yang arus output-nya mengikuti tegangan sistem.
-- Contoh: 9750 WP / 48 V = **203.125 A → 204 A**.
-- **Catatan:** untuk SCC tipe **PWM**, perhitungan berbeda (berbasis arus short-circuit × jumlah string paralel); metode PWM di luar lingkup V1.0 dan akan dicatat sebagai catatan teknis.
-
-### 5.3 Output Sistem
-
-Setelah tombol **"Hitung Kebutuhan"**, tampil dashboard hasil berupa kartu (card):
-
-| Output | Nilai | Keterangan tambahan |
-|--------|-------|---------------------|
-| Inverter | Rekomendasi kapasitas (W) | Tampil juga rentang kelas komersial yang sesuai |
-| Panel Surya | Total kapasitas (WP) + estimasi jumlah lembar | Berdasarkan WP per lembar yang dipilih |
-| Baterai | Kapasitas (Ah) pada tegangan sistem | Tampil juga estimasi dalam kWh |
-| SCC | Kapasitas minimal (A) | Metode MPPT |
-
-Setiap kartu menyertakan ringkasan rumus yang dipakai agar pengguna memahami asal angka (transparansi & edukasi).
+**Hasil Perancangan:**
+1. **Inverter:** Beban 1040 W → Rekomendasi inverter 48V kapasitas **3 kW – 5 kW**.
+2. **Energi:** 20 kWh / hari.
+3. **Baterai:** Kapasitas dasar 417 Ah, riil 521 Ah → **3 unit modul 48V 200Ah** paralel (Total 600 Ah / 28,8 kWh).
+4. **Panel Surya:** PV dasar 4.444 Wp, rugi 20% = 5.334 Wp, genap aman hujan 6 kWp → **12 lembar 550 Wp** (6.600 Wp aktual).
+5. **Konfigurasi String:** **6S 2P** (Vmp: 252V, Imp: 26A).
+6. **Kabel & MCB:**
+   - Jalur PV: MCB DC 20A, Kabel 6 mm².
+   - Jalur Baterai: MCB DC 125A, Kabel 25 mm².
 
 ---
 

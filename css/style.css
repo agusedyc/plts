@@ -27,6 +27,103 @@ body {
   font-weight: 600;
 }
 
+.tip-icon {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  font-size: 0.72rem;
+  border-radius: 50%;
+  background-color: #e9ecef;
+  color: #495057;
+  font-weight: 600;
+  margin-left: 0.25rem;
+  vertical-align: middle;
+  text-decoration: none;
+  user-select: none;
+}
+
+.tip-icon:hover, .tip-icon:focus {
+  background-color: #0d6efd;
+  color: #ffffff;
+  outline: none;
+}
+
+/* Dynamic PV String Diagram */
+.pv-diagram-container {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+.pv-diagram-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.pv-string-block {
+  margin-bottom: 0.5rem;
+  padding: 0.4rem;
+  background: #ffffff;
+  border-radius: 6px;
+  border: 1px dashed #cbd5e1;
+}
+
+.pv-string-header {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.25rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.pv-panels-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pv-panel-module {
+  flex-shrink: 0;
+  width: 54px;
+  height: 60px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+  border: 1.5px solid #94a3b8;
+  border-radius: 4px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  user-select: none;
+}
+
+.pv-wire-arrow {
+  flex-shrink: 0;
+  color: #dc3545;
+  font-weight: bold;
+  font-size: 0.8rem;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.pv-combiner-box {
+  flex-shrink: 0;
+  padding: 0.2rem 0.4rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  text-align: center;
+  margin-left: 4px;
+}
+
 @media (max-width: 575.98px) {
   .result-card .display-6 {
     font-size: 1.5rem;

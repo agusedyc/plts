@@ -1,0 +1,170 @@
+export const DEFAULT_INVERTERS = [
+  {
+    id: 'must-pv18-1k-12v',
+    name: 'Must PV18-1012 VPM 1kW (12V)',
+    brand: 'Must',
+    ratedWatts: 1000,
+    systemVoltage: 12,
+    mpptMinVoltage: 15,
+    mpptMaxVoltage: 105,
+    mpptMaxCurrent: 55,
+    mpptCount: 1,
+    description: '1kW Off-Grid 12V, MPPT 15-105VDC, Max PV 55A',
+  },
+  {
+    id: 'powmr-1k5-12v',
+    name: 'PowMr POW-HVM1.5H-12V (High-Voltage)',
+    brand: 'PowMr',
+    ratedWatts: 1500,
+    systemVoltage: 12,
+    mpptMinVoltage: 30,
+    mpptMaxVoltage: 160,
+    mpptMaxCurrent: 80,
+    mpptCount: 1,
+    description: '1.5kW Off-Grid 12V, MPPT 30-160VDC, Max PV 80A',
+  },
+  {
+    id: 'ils-3800',
+    name: 'ILS3800 3kW (24V Toroidal)',
+    brand: 'ILS',
+    ratedWatts: 3000,
+    systemVoltage: 24,
+    mpptMinVoltage: 30,
+    mpptMaxVoltage: 245,
+    mpptMaxCurrent: 100,
+    mpptCount: 1,
+    description: '3kW Off-Grid 24V Toroidal, MPPT 30-245VDC, Max PV 100A (2700W)',
+  },
+  {
+    id: 'must-pv18-3k-24v',
+    name: 'Must PV18-3024 VHM 3kW (24V)',
+    brand: 'Must',
+    ratedWatts: 3000,
+    systemVoltage: 24,
+    mpptMinVoltage: 30,
+    mpptMaxVoltage: 145,
+    mpptMaxCurrent: 80,
+    mpptCount: 1,
+    description: '3kW Off-Grid 24V, MPPT 30-145VDC, Max PV 80A',
+  },
+  {
+    id: 'growatt-spf3500es',
+    name: 'Growatt SPF 3500 ES (24V High-Voltage)',
+    brand: 'Growatt',
+    ratedWatts: 3500,
+    systemVoltage: 24,
+    mpptMinVoltage: 60,
+    mpptMaxVoltage: 450,
+    mpptMaxCurrent: 16,
+    mpptCount: 1,
+    description: '3.5kW Off-Grid 24V, MPPT 60-450VDC, Max PV 16A',
+  },
+  {
+    id: 'srne-5k',
+    name: 'SRNE HES4850S100-H 5kW (Low-Voltage)',
+    brand: 'SRNE',
+    ratedWatts: 5000,
+    systemVoltage: 48,
+    mpptMinVoltage: 60,
+    mpptMaxVoltage: 245,
+    mpptMaxCurrent: 100,
+    mpptCount: 1,
+    description: '5kW Off-Grid 48V, MPPT 60-245VDC, Max PV 100A',
+  },
+  {
+    id: 'ils-6300',
+    name: 'ILS6300 5kW (48V Toroidal)',
+    brand: 'ILS',
+    ratedWatts: 5000,
+    systemVoltage: 48,
+    mpptMinVoltage: 60,
+    mpptMaxVoltage: 245,
+    mpptMaxCurrent: 100,
+    mpptCount: 1,
+    description: '5kW Off-Grid 48V Toroidal, MPPT 60-245VDC, Max PV 100A (5400W)',
+  },
+  {
+    id: 'growatt-spf5000es',
+    name: 'Growatt SPF 5000 ES (High-Voltage)',
+    brand: 'Growatt',
+    ratedWatts: 5000,
+    systemVoltage: 48,
+    mpptMinVoltage: 120,
+    mpptMaxVoltage: 450,
+    mpptMaxCurrent: 22,
+    mpptCount: 1,
+    description: '5kW Off-Grid 48V, MPPT 120-450VDC, Max PV 22A',
+  },
+  {
+    id: 'deye-sun-5k',
+    name: 'Deye SUN-5K-SG03LP1-EU (Dual MPPT)',
+    brand: 'Deye',
+    ratedWatts: 5000,
+    systemVoltage: 48,
+    mpptMinVoltage: 125,
+    mpptMaxVoltage: 500,
+    mpptMaxCurrent: 26,
+    mpptCount: 2,
+    description: '5kW Hybrid/Off-Grid 48V, 2 MPPT (13A+13A), 125-500VDC',
+  },
+  {
+    id: 'deye-sun-8k',
+    name: 'Deye SUN-8K-SG01LP1-EU (Dual MPPT)',
+    brand: 'Deye',
+    ratedWatts: 8000,
+    systemVoltage: 48,
+    mpptMinVoltage: 150,
+    mpptMaxVoltage: 500,
+    mpptMaxCurrent: 44,
+    mpptCount: 2,
+    description: '8kW Hybrid/Off-Grid 48V, 2 MPPT (22A+22A), 150-500VDC',
+  },
+  {
+    id: 'must-pv18-5k',
+    name: 'Must PV18-5048 VHM 5kW',
+    brand: 'Must',
+    ratedWatts: 5000,
+    systemVoltage: 48,
+    mpptMinVoltage: 60,
+    mpptMaxVoltage: 145,
+    mpptMaxCurrent: 80,
+    mpptCount: 1,
+    description: '5kW Off-Grid 48V, MPPT 60-145VDC, Max PV 80A',
+  },
+  {
+    id: 'powmr-5k5',
+    name: 'PowMr POW-HVM5.5K-48V',
+    brand: 'PowMr',
+    ratedWatts: 5500,
+    systemVoltage: 48,
+    mpptMinVoltage: 120,
+    mpptMaxVoltage: 450,
+    mpptMaxCurrent: 100,
+    mpptCount: 1,
+    description: '5.5kW Off-Grid 48V, MPPT 120-450VDC, Max PV 100A',
+  },
+];
+
+export async function fetchInvertersDatabase(url = 'data/inverters.json') {
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data;
+      }
+    }
+  } catch {
+    // Fallback to default inverters
+  }
+  return DEFAULT_INVERTERS;
+}
+
+export function findInverterById(id, inverters = DEFAULT_INVERTERS) {
+  return inverters.find((inv) => inv.id === id) || null;
+}
+
+export function filterInvertersByVoltage(voltage, inverters = DEFAULT_INVERTERS) {
+  const v = Number(voltage) || 48;
+  return inverters.filter((inv) => Number(inv.systemVoltage) === v);
+}

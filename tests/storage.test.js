@@ -34,6 +34,15 @@ test('deleteHistory removes only matching id', async () => {
   assert.equal((await s.getHistory()).length, 0);
 });
 
+test('clearHistory removes all history records', async () => {
+  const s = createStorage(memoryAdapter());
+  await s.saveCalculation({ input: { a: 1 } });
+  await s.saveCalculation({ input: { a: 2 } });
+  assert.equal((await s.getHistory()).length, 2);
+  await s.clearHistory();
+  assert.equal((await s.getHistory()).length, 0);
+});
+
 test('savePreferences and getPreferences round-trip', async () => {
   const s = createStorage(memoryAdapter());
   await s.savePreferences({ peakPower: 5500, sph: 4 });

@@ -82,8 +82,9 @@ export function createIndexedDbAdapter(dbName = 'plts-kalkulator', version = 1) 
       return withStore(store, 'readonly', (os) => os.getAll());
     },
     async put(store, value) {
+      const clean = JSON.parse(JSON.stringify(value));
       return withStore(store, 'readwrite', (os) =>
-        store === 'preferences' ? os.put(value, 'prefs') : os.put(value));
+        store === 'preferences' ? os.put(clean, 'prefs') : os.put(clean));
     },
     async delete(store, id) {
       return withStore(store, 'readwrite', (os) => os.delete(id));
