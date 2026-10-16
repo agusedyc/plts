@@ -420,6 +420,48 @@ export function calculateSystemBOM({
   };
 }
 
+export function calculateBatteryRuntime({
+  actualBatteryAh = 0,
+  systemVoltage = 48,
+  dod = 0.8,
+  loadWatts = 0,
+  inverterEfficiency = 0.9,
+} = {}) {
+  const ah = Math.max(0, Number(actualBatteryAh) || 0);
+  const volt = Math.max(1, Number(systemVoltage) || 48);
+  const d = Math.max(0, Math.min(1, Number(dod) || 0.8));
+  const eff = Math.max(0.1, Math.min(1, Number(inverterEfficiency) || 0.9));
+  const load = Math.max(0, Number(loadWatts) || 0);
+
+  const usableWh = Math.round(ah * volt * d * eff);
+  let runtimeHours = 0;
+  if (load > 0 && usableWh > 0) {
+    runtimeHours = Math.round((usableWh / load) * 10) / 10;
+  }
+
+  const targetHours = 24;
+  const deficitHours = Math.round(Math.max(0, targetHours - runtimeHours) * 10) / 10;
+  const percentageOf24h = (load > 0 && usableWh > 0)
+    ? Math.round((usableWh / (load * targetHours)) * 100)
+    : 0;
+
+  let status = 'cukup';
+  if (runtimeHours < 23.9) {
+    status = 'kurang';
+  } else if (runtimeHours > 24.1) {
+    status = 'lebih';
+  }
+
+  return {
+    usableWh,
+    runtimeHours,
+    targetHours,
+    deficitHours,
+    percentageOf24h,
+    status,
+  };
+}
+
 export function calculateSizing({
   powerVa,
   peakPower,

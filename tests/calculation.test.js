@@ -20,6 +20,7 @@ import {
   inverterAcMcbAmps,
   calculateBracketCost,
   calculateSystemBOM,
+  calculateBatteryRuntime,
 } from '../js/calculation.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -413,4 +414,33 @@ test('calculateSystemBOM sums all components and computes ROI/BEP against monthl
   assert.equal(bom.bepMonths, 163.3);
   // BEP years: 163.3 / 12 = 13.6
   assert.equal(bom.bepYears, 13.6);
+});
+
+test('calculateBatteryRuntime simulates backup duration with custom battery capacity', () => {
+  // 200Ah at 48V, load 1040W, DoD 80%, inv eff 90%
+  // usableWh = 200 * 48 * 0.8 * 0.9 = 6912 Wh
+  // runtimeHours = 6912 / 1040 = 6.646... -> 6.6 jam
+  const res = calculateBatteryRuntime({
+    actualBatteryAh: 200,
+    systemVoltage: 48,
+    dod: 0.8,
+    loadWatts: 1040,
+    inverterEfficiency: 0.9,
+  });
+
+  assert.equal(res.usableWh, 6912);
+  assert.equal(res.runtimeHours, 6.6);
+  assert.equal(res.targetHours, 24);
+  assert.equal(res.deficitHours, 17.4);
+  assert.equal(res.percentageOf24h, 28);
+  assert.equal(res.status, 'kurang');
+
+  // Edge case: 0 Ah or 0 load
+  const zeroAh = calculateBatteryRuntime({ actualBatteryAh: 0, loadWatts: 1000 });
+  assert.equal(zeroAh.usableWh, 0);
+  assert.equal(zeroAh.runtimeHours, 0);
+  assert.equal(zeroAh.deficitHours, 24);
+
+  const zeroLoad = calculateBatteryRuntime({ actualBatteryAh: 200, loadWatts: 0 });
+  assert.equal(zeroLoad.runtimeHours, 0);
 });
