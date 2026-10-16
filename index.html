@@ -464,13 +464,73 @@
                 <div class="mt-1 text-muted" style="font-size: 0.74rem;">
                   Min. Teknis Inverter: <strong class="text-dark" x-text="(results?.minBatteryAh || 200) + ' Ah'"></strong> <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Batas kapasitas baterai minimum sesuai spesifikasi teknis daya inverter agar BMS tidak trip saat lonjakan beban.">?</span>
                 </div>
-                <div class="mt-2 pt-1 border-top text-muted">
-                  <strong>Alternatif Charging (PLN/Genset):</strong>
-                  <span class="text-dark fw-semibold" x-text="'± ' + (results?.alternativeChargingHours || chargingHoursPreview) + ' jam'"></span> pengisian saat tanpa matahari.
+                <!-- Simulasi Ketahanan Baterai Kustom -->
+                <div class="mt-2 pt-2 border-top">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-semibold text-dark" style="font-size: 0.76rem;">⚡ Simulasi Ketahanan Daya (Backup):</span>
+                    <span class="badge" :class="batteryRuntimeSimulation.status === 'kurang' ? 'bg-warning-subtle text-warning-emphasis border border-warning-subtle' : 'bg-success-subtle text-success border border-success-subtle'"
+                          x-text="batteryRuntimeSimulation.runtimeHours + ' Jam (' + batteryRuntimeSimulation.percentageOf24h + '%)'"></span>
+                  </div>
+                  <div class="row g-1 align-items-center mb-1">
+                    <div class="col-7">
+                      <label class="form-label mb-0 text-muted" style="font-size: 0.72rem;" for="inputCustomBatteryModules">Jumlah Modul Baterai Terpasang:</label>
+                    </div>
+                    <div class="col-5">
+                      <div class="input-group input-group-sm">
+                        <input type="number" min="1" max="20" class="form-control form-control-sm text-center"
+                               id="inputCustomBatteryModules" x-model.number="inputs.customBatteryModuleCount"
+                               :placeholder="results?.batteryModules || 1">
+                        <span class="input-group-text py-0 px-1" style="font-size: 0.7rem;">Unit</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-muted" style="font-size: 0.72rem;">
+                    Kapasitas Terpasang: <strong class="text-dark" x-text="effectiveBatteryAh + ' Ah (' + (effectiveBatteryModules * (inputs.moduleAh || 200)) + ' Ah)'"></strong>
+                    <template x-if="batteryRuntimeSimulation.status === 'kurang'">
+                      <span class="text-danger">(Defisit <span x-text="batteryRuntimeSimulation.deficitHours"></span> jam dari target 24 jam)</span>
+                    </template>
+                  </div>
                 </div>
+
+                <!-- Pengisian dari Grid PLN (AC Utility Charger) -->
+                <div class="mt-2 pt-2 border-top">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-semibold text-dark" style="font-size: 0.76rem;">🔌 Pengecasan via Grid PLN:</span>
+                    <span class="text-dark fw-bold" style="font-size: 0.76rem;" x-text="'± ' + plnChargingDetails.chargingHours + ' Jam Penuh'"></span>
+                  </div>
+                  <div class="row g-1 align-items-center mb-1">
+                    <div class="col-6">
+                      <label class="form-label mb-0 text-muted" style="font-size: 0.72rem;" for="selectPlnChargingAmps">Arus Pengisian (A):</label>
+                    </div>
+                    <div class="col-6">
+                      <select class="form-select form-select-sm py-0" id="selectPlnChargingAmps" x-model.number="inputs.plnChargingAmps" style="font-size: 0.75rem;">
+                        <option :value="10">10 A (± 630 W)</option>
+                        <option :value="20">20 A (± 1.250 W)</option>
+                        <option :value="30">30 A (± 1.880 W)</option>
+                        <option :value="40">40 A (± 2.500 W)</option>
+                        <option :value="50">50 A (± 3.140 W)</option>
+                        <option :value="60">60 A (± 3.760 W)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.72rem;">
+                    <span>Daya Serap PLN: <strong class="text-dark" x-text="plnChargingDetails.plnDrawWatts + ' Watt'"></strong></span>
+                    <template x-if="plnChargingDetails.isMcbSafe">
+                      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.68rem;"
+                            x-text="'Aman PLN ' + (inputs.powerVa || 2200) + ' VA (' + plnChargingDetails.mcbLoadPercent + '%)'"></span>
+                    </template>
+                    <template x-if="!plnChargingDetails.isMcbSafe">
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.68rem;">⚠️ Potensi Trip MCB</span>
+                    </template>
+                  </div>
+                  <template x-if="!plnChargingDetails.isMcbSafe">
+                    <div class="alert alert-warning py-1 px-2 mb-0 small mt-1" style="font-size: 0.7rem;" x-text="plnChargingDetails.mcbWarningMessage"></div>
+                  </template>
+                </div>
+
                 <template x-if="totalBatteryEstimatedCost > 0">
                   <div class="mt-2 pt-1 border-top d-flex justify-content-between align-items-center text-success" style="font-size: 0.74rem;">
-                    <span>🏷️ Est. Total Biaya Baterai (<span x-text="(results?.batteryModules || 1) + ' unit'"></span>):</span>
+                    <span>🏷️ Est. Total Biaya Baterai (<span x-text="(inputs.useCustomBomQuantities ? effectiveBatteryModules : (results?.batteryModules || 1)) + ' unit'"></span>):</span>
                     <strong x-text="formatRupiah(totalBatteryEstimatedCost)"></strong>
                   </div>
                 </template>
@@ -542,9 +602,48 @@
                 <div class="mt-1 text-muted" style="font-size: 0.74rem;">
                   Min. Teknis MPPT Startup: <strong class="text-dark" x-text="(results?.minPanelsForMppt || 2) + ' modul seri'"></strong> <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Jumlah minimal panel dalam 1 string seri agar tegangan Vmp mencapai batas bawah startup MPPT inverter.">?</span>
                 </div>
+
+                <!-- Pasang Bertahap (Partial String / Kustom Jumlah Panel) -->
+                <div class="mt-2 pt-2 border-top">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-semibold text-dark" style="font-size: 0.76rem;">☀️ Pasang Bertahap / Sebagian:</span>
+                    <span class="badge" :class="partialPvDetails.coveragePercent >= 100 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'"
+                          x-text="partialPvDetails.coveragePercent + '% Beban Terpenuhi'"></span>
+                  </div>
+                  <div class="row g-1 align-items-center mb-1">
+                    <div class="col-7">
+                      <label class="form-label mb-0 text-muted" style="font-size: 0.72rem;" for="inputCustomPanelCount">Jumlah Panel Terpasang Riil:</label>
+                    </div>
+                    <div class="col-5">
+                      <div class="input-group input-group-sm">
+                        <input type="number" min="1" max="100" class="form-control form-control-sm text-center"
+                               id="inputCustomPanelCount" x-model.number="inputs.customPanelCount"
+                               :placeholder="results?.panelCount || 4">
+                        <span class="input-group-text py-0 px-1" style="font-size: 0.7rem;">Lbr</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-muted" style="font-size: 0.72rem;">
+                    Daya Riil: <strong class="text-dark" x-text="partialPvDetails.actualInstalledWp + ' Wp'"></strong> ·
+                    Produksi: <strong class="text-success" x-text="partialPvDetails.actualDailyKwh + ' kWh/hari'"></strong>
+                    <template x-if="partialPvDetails.coveragePercent < 100">
+                      <span class="text-danger">(Defisit <span x-text="partialPvDetails.deficitKwh"></span> kWh)</span>
+                    </template>
+                  </div>
+                  <div class="mt-1 d-flex justify-content-between align-items-center" style="font-size: 0.71rem;">
+                    <span class="text-muted">Vmp String: <strong class="text-dark" x-text="partialPvDetails.estimatedStringVoltage + ' V'"></strong></span>
+                    <template x-if="partialPvDetails.isMpptVoltageMet">
+                      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.68rem;">✓ MPPT Aman (≥ <span x-text="partialPvDetails.mpptMinVoltage"></span>V)</span>
+                    </template>
+                    <template x-if="!partialPvDetails.isMpptVoltageMet">
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.68rem;">✕ Tegangan Kurang (Min. <span x-text="results?.minPanelsForMppt || 2"></span> seri)</span>
+                    </template>
+                  </div>
+                </div>
+
                 <template x-if="totalPanelEstimatedCost > 0">
                   <div class="mt-2 pt-1 border-top d-flex justify-content-between align-items-center text-success" style="font-size: 0.74rem;">
-                    <span>🏷️ Est. Total Biaya Panel:</span>
+                    <span>🏷️ Est. Total Biaya Panel (<span x-text="(inputs.useCustomBomQuantities ? effectivePanelCount : (results?.panelCount || 0)) + ' lembar'"></span>):</span>
                     <strong x-text="formatRupiah(totalPanelEstimatedCost)"></strong>
                   </div>
                 </template>
@@ -809,6 +908,17 @@
             
             <!-- Tabel Rincian Biaya Perangkat (BOM) -->
             <div class="col-lg-8">
+              <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <div class="form-check form-switch mb-0">
+                  <input class="form-check-input" type="checkbox" role="switch" id="switchCustomBom" x-model="inputs.useCustomBomQuantities">
+                  <label class="form-check-label small fw-semibold" for="switchCustomBom">
+                    Hitung Anggaran Sesuai Pasang Bertahap (Panel: <span class="text-success" x-text="effectivePanelCount"></span> lbr, Baterai: <span class="text-primary" x-text="effectiveBatteryModules"></span> unit)
+                  </label>
+                </div>
+                <template x-if="inputs.useCustomBomQuantities">
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle py-1" style="font-size: 0.72rem;">Mode Pasang Bertahap Aktif</span>
+                </template>
+              </div>
               <div class="table-responsive">
                 <table class="table table-sm table-bordered align-middle mb-0" style="font-size: 0.85rem;">
                   <thead class="table-light">
@@ -827,7 +937,7 @@
                         <div class="small text-muted" x-text="selectedPanelName"></div>
                       </td>
                       <td class="text-center">
-                        <span class="badge bg-light text-dark border" x-text="(results?.panelCount || 0) + ' Lembar'"></span>
+                        <span class="badge bg-light text-dark border" x-text="(inputs.useCustomBomQuantities ? effectivePanelCount : (results?.panelCount || 0)) + ' Lembar'"></span>
                       </td>
                       <td class="text-end text-muted" x-text="formatRupiah(selectedPanelObj?.priceIdr || 0)"></td>
                       <td class="text-end fw-bold text-dark" x-text="formatRupiah(systemBOM.panelCost)"></td>
@@ -840,7 +950,7 @@
                         <div class="small text-muted" x-text="'Rel AL6005, L-feet/roof clamp, mid/end clamp, baut SUS304 (' + bracketDetails.sizeCategory + ')'"></div>
                       </td>
                       <td class="text-center">
-                        <span class="badge bg-light text-dark border" x-text="(results?.panelCount || 0) + ' Set'"></span>
+                        <span class="badge bg-light text-dark border" x-text="(inputs.useCustomBomQuantities ? effectivePanelCount : (results?.panelCount || 0)) + ' Set'"></span>
                       </td>
                       <td class="text-end text-muted" x-text="formatRupiah(bracketDetails.unitCost)"></td>
                       <td class="text-end fw-bold text-dark" x-text="formatRupiah(systemBOM.bracketCost)"></td>
@@ -866,7 +976,7 @@
                         <div class="small text-muted" x-text="selectedBatteryName"></div>
                       </td>
                       <td class="text-center">
-                        <span class="badge bg-light text-dark border" x-text="(results?.batteryModules || 1) + ' Modul'"></span>
+                        <span class="badge bg-light text-dark border" x-text="(inputs.useCustomBomQuantities ? effectiveBatteryModules : (results?.batteryModules || 1)) + ' Modul'"></span>
                       </td>
                       <td class="text-end text-muted" x-text="formatRupiah(selectedBatteryObj?.priceIdr || 0)"></td>
                       <td class="text-end fw-bold text-dark" x-text="formatRupiah(systemBOM.batteryCost)"></td>
