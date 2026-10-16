@@ -14,6 +14,7 @@ import { validateInput } from './validation.js';
 import { createStorage, getDefaultAdapter } from './storage.js';
 import { DEFAULT_PANELS, fetchPanelsDatabase, findPanelById } from './panels.js';
 import { DEFAULT_INVERTERS, fetchInvertersDatabase, findInverterById, filterInvertersByVoltage } from './inverters.js';
+import { DEFAULT_BATTERIES, fetchBatteriesDatabase, findBatteryById, filterBatteriesByVoltage } from './batteries.js';
 
 const storage = createStorage(getDefaultAdapter());
 
@@ -38,6 +39,7 @@ export function pltsApp() {
       systemVoltage: 48,
       batteryType: 'lithium',
       dod: DOD_DEFAULTS.lithium,
+      selectedBatteryId: 'cst-48v-200ah',
       moduleAh: 200,
       autonomyDays: 1,
       selectedPanelId: 'solana-550',
@@ -90,10 +92,12 @@ export function pltsApp() {
     historyPerPage: 5,
     panels: [...DEFAULT_PANELS],
     inverters: [...DEFAULT_INVERTERS],
+    batteries: [...DEFAULT_BATTERIES],
 
     async init() {
       this.panels = await fetchPanelsDatabase();
       this.inverters = await fetchInvertersDatabase();
+      this.batteries = await fetchBatteriesDatabase();
       await this.loadPreferences();
       await this.loadHistory();
       await this.hitung();
@@ -160,6 +164,29 @@ export function pltsApp() {
       return list.length > 0 ? list : this.inverters;
     },
 
+    get filteredBatteries() {
+      const v = Number(this.inputs.systemVoltage) || 48;
+      const list = filterBatteriesByVoltage(v, this.batteries);
+      return list.length > 0 ? list : this.batteries;
+    },
+
+    onBatterySelect(batteryId) {
+      this.inputs.selectedBatteryId = batteryId;
+      if (batteryId === 'custom') {
+        this.hitung();
+        return;
+      }
+      const bat = findBatteryById(batteryId, this.batteries);
+      if (bat) {
+        this.inputs.moduleAh = bat.ah;
+        if (bat.type) {
+          this.inputs.batteryType = bat.type;
+          this.inputs.dod = DOD_DEFAULTS[bat.type] ?? this.inputs.dod;
+        }
+      }
+      this.hitung();
+    },
+
     onSystemVoltageChange() {
       const v = Number(this.inputs.systemVoltage) || 48;
       if (this.inputs.selectedInverterId !== 'custom') {
@@ -168,6 +195,19 @@ export function pltsApp() {
           const list = this.filteredInverters;
           if (list.length > 0) {
             this.onInverterSelect(list[0].id);
+          }
+        }
+      }
+      if (this.inputs.selectedBatteryId !== 'custom') {
+        const currentBat = findBatteryById(this.inputs.selectedBatteryId, this.batteries);
+        const batSysV = currentBat ? Number(currentBat.systemVoltage || currentBat.voltage) : 0;
+        const isCompat = (v === 48 && (batSysV === 48 || Number(currentBat?.voltage) === 51.2)) ||
+                         (v === 24 && (batSysV === 24 || Number(currentBat?.voltage) === 25.6)) ||
+                         (v === 12 && (batSysV === 12 || Number(currentBat?.voltage) === 12.8));
+        if (!currentBat || !isCompat) {
+          const batList = this.filteredBatteries;
+          if (batList.length > 0) {
+            this.onBatterySelect(batList[0].id);
             return;
           }
         }
@@ -272,6 +312,25 @@ export function pltsApp() {
     get selectedInverterObj() {
       if (this.inputs.selectedInverterId === 'custom') return null;
       return findInverterById(this.inputs.selectedInverterId, this.inverters);
+    },
+
+    get selectedBatteryObj() {
+      if (this.inputs.selectedBatteryId === 'custom') return null;
+      return findBatteryById(this.inputs.selectedBatteryId, this.batteries);
+    },
+
+    get selectedBatteryName() {
+      if (this.inputs.selectedBatteryId === 'custom') {
+        return 'Baterai Kustom (' + (this.inputs.moduleAh || 200) + ' Ah)';
+      }
+      const b = findBatteryById(this.inputs.selectedBatteryId, this.batteries);
+      return b ? b.name : ((this.inputs.moduleAh || 200) + ' Ah');
+    },
+
+    get totalBatteryEstimatedCost() {
+      const price = this.selectedBatteryObj?.priceIdr || 0;
+      const count = Number(this.results?.batteryModules) || 1;
+      return count * price;
     },
 
     get totalPanelEstimatedCost() {

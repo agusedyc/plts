@@ -188,12 +188,23 @@
             </div>
 
             <div class="col-md-4">
-              <label class="form-label fw-semibold" for="moduleAh">Kapasitas Per Modul Baterai (Ah) <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Ampere-hour (Ah) modul baterai per unit di pasaran (umumnya modul server rack 48V 100Ah atau 200Ah).">?</span></label>
-              <select class="form-select" id="moduleAh" x-model.number="inputs.moduleAh" @change="hitung()">
-                <option :value="200">200 Ah (Standar Rekomendasi)</option>
-                <option :value="100">100 Ah</option>
-                <option :value="280">280 Ah</option>
+              <label class="form-label fw-semibold" for="batterySelect">
+                Pilihan Model Baterai (<span x-text="(inputs.systemVoltage || 48) + 'V'"></span>)
+                <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Pilih model baterai LiFePO4 dari database pasar sesuai tegangan sistem (12V, 24V, atau 48V/51.2V). Kapasitas Ah dan harga otomatis terisi.">?</span>
+              </label>
+              <select class="form-select" id="batterySelect" x-model="inputs.selectedBatteryId" @change="onBatterySelect($event.target.value)">
+                <template x-for="b in filteredBatteries" :key="b.id">
+                  <option :value="b.id" x-text="b.name + ' — ' + formatRupiah(b.priceIdr)"></option>
+                </template>
+                <option value="custom">Kustom / Input Ah Manual...</option>
               </select>
+              <div class="form-text text-muted" x-show="inputs.selectedBatteryId !== 'custom'">
+                Kapasitas: <strong class="text-dark" x-text="(inputs.moduleAh || 200) + ' Ah'"></strong> ·
+                Harga pasar: <strong class="text-success" x-text="formatRupiah(selectedBatteryObj?.priceIdr || 0)"></strong>.
+              </div>
+              <div class="form-text text-primary" x-show="inputs.selectedBatteryId === 'custom'">
+                Kapasitas kustom: <strong x-text="(inputs.moduleAh || 200) + ' Ah'"></strong>.
+              </div>
             </div>
 
             <div class="col-md-4">
@@ -443,7 +454,9 @@
                 <small class="text-muted" role="button" tabindex="0" data-bs-toggle="tooltip" data-bs-title="Depth of Discharge 80% menjaga umur sel baterai tetap panjang hingga 4000+ siklus."><span x-text="'LiFePO4 ' + (inputs?.systemVoltage || 48) + 'V (?)'"></span></small>
               </div>
               <h3 class="h5 card-title mb-1">Kapasitas Baterai</h3>
-              <p class="display-6 fw-bold text-warning mb-2" x-text="(results?.batteryAh || 0) + ' Ah'"></p>
+              <p class="display-6 fw-bold text-warning mb-1" x-text="(results?.batteryAh || 0) + ' Ah'"></p>
+              <div class="badge bg-light text-warning border mb-2 text-truncate d-inline-block mw-100 fw-semibold" x-text="selectedBatteryName"></div>
+
               <div class="p-2 bg-light rounded border mb-2 small">
                 <div><strong>Kapasitas Riil:</strong> <span class="fw-bold" x-text="(results?.batteryAh || 0) + ' Ah (' + (results?.batteryKwh || 0) + ' kWh)'"></span></div>
                 <div><strong>Kapasitas Dasar:</strong> <span x-text="(results?.batteryAhBase || 0) + ' Ah (DoD ' + (inputs?.dod || 80) + '%)'"></span></div>
@@ -454,6 +467,51 @@
                 <div class="mt-2 pt-1 border-top text-muted">
                   <strong>Alternatif Charging (PLN/Genset):</strong>
                   <span class="text-dark fw-semibold" x-text="'± ' + (results?.alternativeChargingHours || chargingHoursPreview) + ' jam'"></span> pengisian saat tanpa matahari.
+                </div>
+                <template x-if="totalBatteryEstimatedCost > 0">
+                  <div class="mt-2 pt-1 border-top d-flex justify-content-between align-items-center text-success" style="font-size: 0.74rem;">
+                    <span>🏷️ Est. Total Biaya Baterai (<span x-text="(results?.batteryModules || 1) + ' unit'"></span>):</span>
+                    <strong x-text="formatRupiah(totalBatteryEstimatedCost)"></strong>
+                  </div>
+                </template>
+              </div>
+
+              <!-- Pilihan Tipe / Model Baterai -->
+              <div class="border-top pt-2 mt-2">
+                <label class="form-label small fw-semibold mb-1" for="resBatterySelect">
+                  Model Baterai Pilihan (<span x-text="(inputs.systemVoltage || 48) + 'V'"></span>):
+                  <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Pilih model baterai LiFePO4 dari database pasar (Shoto, Narada, Deye 51.2V, Pylontech, EVE). Kapasitas modul dan estimasi harga otomatis diperbarui.">?</span>
+                </label>
+                <select class="form-select form-select-sm mb-1" id="resBatterySelect" x-model="inputs.selectedBatteryId" @change="onBatterySelect($event.target.value)">
+                  <template x-for="b in filteredBatteries" :key="b.id">
+                    <option :value="b.id" x-text="b.name + ' — ' + formatRupiah(b.priceIdr)"></option>
+                  </template>
+                  <option value="custom">Kustom / Input Ah Manual...</option>
+                </select>
+                <div class="text-muted small mb-2" style="font-size: 0.74rem;">
+                  <div>Spek Modul: <strong class="text-dark" x-text="(inputs.moduleAh || 200) + ' Ah · ' + (inputs.batteryType === 'lithium' ? 'LiFePO4' : 'VRLA/Aki') + ' · DoD ' + (inputs.dod || 80) + '%'"></strong></div>
+                  <template x-if="selectedBatteryObj?.priceIdr">
+                    <div class="text-success fw-semibold mt-1 d-flex justify-content-between align-items-center">
+                      <span>🏷️ Harga Satuan: <span x-text="formatRupiah(selectedBatteryObj.priceIdr)"></span></span>
+                      <span>Total: <strong x-text="formatRupiah(totalBatteryEstimatedCost)"></strong></span>
+                    </div>
+                  </template>
+                </div>
+                <div class="collapse" :class="{ 'show': inputs.selectedBatteryId === 'custom' }" id="customBatteryCollapse">
+                  <div class="card card-body bg-light p-2 small border-0 mb-2">
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="manualModuleAh">Kapasitas Modul (Ah)</label>
+                        <input type="number" min="20" max="1000" step="10" class="form-control form-control-sm"
+                               id="manualModuleAh" x-model.number="inputs.moduleAh" @input="hitung()">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label mb-0 fw-semibold" for="manualDoD">DoD (%)</label>
+                        <input type="number" min="10" max="100" step="5" class="form-control form-control-sm"
+                               id="manualDoD" x-model.number="inputs.dod" @input="hitung()">
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <p class="small text-muted mb-0">Tipe Lithium LiFePO4 efisiensi tinggi untuk siklus harian 24 jam.</p>
@@ -957,36 +1015,92 @@
 
               <!-- BLOK BANK BATERAI (BAWAH) -->
               <div class="schematic-card card-battery flex-grow-1">
-                <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-danger">
+                <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-danger">
                   <span class="fw-bold text-dark" style="font-size: 0.85rem;">🔋 4. Bank Baterai (Cadangan 24 Jam)</span>
-                  <span class="badge bg-danger" x-text="'Sistem ' + (inputs?.systemVoltage || 48) + 'V'"></span>
+                  <span class="badge bg-danger" x-text="(selectedBatteryObj?.voltage ? selectedBatteryObj.voltage + 'V' : (inputs?.systemVoltage || 48) + 'V')"></span>
                 </div>
 
-                <div class="small text-muted mb-2" style="font-size: 0.75rem;">
-                  Tipe: <strong>Lithium LiFePO4</strong> (DoD <span x-text="(inputs?.dod || 80) + '%'"></span>)<br>
-                  Konfigurasi: <strong class="text-danger" x-text="(results?.batteryModules || 1) + ' Unit Paralel'"></strong> 
-                  (@<span x-text="(results?.moduleAh || 200) + ' Ah per modul'"></span>)
-                </div>
-
-                <!-- Busbar Paralel Baterai -->
-                <div class="bg-white p-2 rounded border mb-2">
-                  <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.65rem;">
-                    <span class="text-danger fw-bold">Busbar Positif (+)</span>
-                    <span class="text-dark fw-bold">Busbar Negatif (-)</span>
+                <div class="small text-muted mb-2" style="font-size: 0.74rem;">
+                  <div>Model: <strong class="text-dark" x-text="selectedBatteryName"></strong></div>
+                  <div>
+                    Susunan: <strong class="text-danger" x-text="(results?.batteryModules || 1) + ' Unit Modul Paralel'"></strong> 
+                    (@<span x-text="(results?.moduleAh || 200) + ' Ah per unit'"></span>)
                   </div>
-                  <div class="busbar-strip busbar-pos"></div>
-                  <div class="busbar-strip busbar-neg mb-2"></div>
+                  <template x-if="selectedBatteryObj?.priceIdr">
+                    <div class="text-success fw-semibold mt-1">
+                      🏷️ Est. Harga: <span x-text="formatRupiah(selectedBatteryObj.priceIdr) + ' / unit (' + formatRupiah(totalBatteryEstimatedCost) + ' total)'"></span>
+                    </div>
+                  </template>
+                </div>
 
-                  <!-- Unit-unit modul baterai paralel -->
+                <!-- Enclosure Fisik Rak / Unit Baterai Realistis -->
+                <div class="battery-rack-enclosure mb-2">
+                  <!-- Busbar Paralel Baterai jika modul > 1 -->
+                  <div class="mb-2 p-1 px-2 rounded" style="background: rgba(255,255,255,0.06);" x-show="batteryModulesArray.length > 1">
+                    <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.65rem;">
+                      <span class="text-danger fw-bold">━ Busbar Positif Tembaga (+)</span>
+                      <span class="text-secondary fw-bold">━ Busbar Negatif Tembaga (-)</span>
+                    </div>
+                    <div class="busbar-strip busbar-pos"></div>
+                    <div class="busbar-strip busbar-neg"></div>
+                  </div>
+
+                  <!-- Unit-unit modul baterai pack realistis -->
                   <div class="battery-modules-list">
                     <template x-for="b in batteryModulesArray" :key="b">
-                      <div class="battery-module-box">
-                        <div>
-                          <span class="badge bg-danger me-1" style="font-size: 0.6rem;">+</span>
-                          <span class="fw-bold text-dark" x-text="'Modul ' + b + ' (' + (inputs?.systemVoltage || 48) + 'V)'"></span>
-                          <span class="badge bg-dark ms-1" style="font-size: 0.6rem;">-</span>
+                      <div class="real-battery-unit">
+                        <!-- Rack Left Ear & Handle -->
+                        <div class="battery-rack-ear">
+                          <div class="rack-screw-hole"></div>
+                          <div class="rack-handle"></div>
+                          <div class="rack-screw-hole"></div>
                         </div>
-                        <div class="text-muted fw-semibold" x-text="(results?.moduleAh || 200) + ' Ah'"></div>
+
+                        <!-- Battery Unit Center Panel -->
+                        <div class="battery-bms-display">
+                          <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold" style="font-size: 0.72rem; color: #f1f5f9;">
+                              <span class="text-warning">⚡</span> <span x-text="'Modul ' + b + ': ' + (selectedBatteryObj?.brand || 'LiFePO4') + ' ESS'"></span>
+                            </span>
+                            <span class="badge bg-dark border border-secondary" style="font-size: 0.62rem;" x-text="(selectedBatteryObj?.voltage ? selectedBatteryObj.voltage + 'V' : (inputs?.systemVoltage || 48) + 'V') + ' ' + (inputs?.moduleAh || 200) + 'Ah'"></span>
+                          </div>
+                          
+                          <div class="d-flex justify-content-between align-items-center" style="font-size: 0.62rem; color: #94a3b8;">
+                            <div class="d-flex align-items-center gap-1">
+                              <span>SoC:</span>
+                              <div class="battery-soc-meter" title="Level Daya Baterai Penuh">
+                                <span class="soc-dot"></span>
+                                <span class="soc-dot"></span>
+                                <span class="soc-dot"></span>
+                                <span class="soc-dot"></span>
+                              </div>
+                              <span class="soc-dot run ms-1" title="Smart BMS Active"></span>
+                              <span style="font-size: 0.58rem; color: #38bdf8;">BMS ON</span>
+                            </div>
+                            <div class="text-end font-monospace" style="color: #cbd5e1;">
+                              <span x-text="(Math.round(((selectedBatteryObj?.voltage || inputs?.systemVoltage || 48) * (inputs?.moduleAh || 200)) / 100) / 10) + ' kWh'"></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Polarity Stud Terminals -->
+                        <div class="battery-terminal-group">
+                          <div class="terminal-post">
+                            <div class="terminal-stud pos" title="Kutub Positif (+)">+</div>
+                            <span class="terminal-label pos">POS</span>
+                          </div>
+                          <div class="terminal-post">
+                            <div class="terminal-stud neg" title="Kutub Negatif (-)">-</div>
+                            <span class="terminal-label neg">NEG</span>
+                          </div>
+                        </div>
+
+                        <!-- Rack Right Ear & Handle -->
+                        <div class="battery-rack-ear">
+                          <div class="rack-screw-hole"></div>
+                          <div class="rack-handle"></div>
+                          <div class="rack-screw-hole"></div>
+                        </div>
                       </div>
                     </template>
                   </div>
@@ -994,7 +1108,7 @@
 
                 <div class="p-1 px-2 bg-white rounded border small" style="font-size: 0.72rem;">
                   <div><strong>Total Kapasitas Bank:</strong> <span class="text-danger fw-bold" x-text="((results?.batteryModules || 1) * (results?.moduleAh || 200)) + ' Ah (' + (results?.batteryKwh || 6.4) + ' kWh)'"></span></div>
-                  <div><strong>Kapasitas Bersih Efektif:</strong> <span class="text-dark fw-bold" x-text="(results?.batteryAh || 0) + ' Ah'"></span></div>
+                  <div><strong>Kapasitas Bersih Efektif:</strong> <span class="text-dark fw-bold" x-text="(results?.batteryAh || 0) + ' Ah (DoD ' + (inputs?.dod || 80) + '%)'"></span></div>
                 </div>
               </div>
 

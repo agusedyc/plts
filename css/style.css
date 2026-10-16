@@ -230,6 +230,137 @@ body {
   margin-bottom: 0.25rem;
 }
 
+/* Desain Realistis Bank Baterai (LiFePO4 Rack / Powerwall ESS) */
+.battery-rack-enclosure {
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 8px;
+  padding: 0.6rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.real-battery-unit {
+  position: relative;
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  border: 1.5px solid #475569;
+  border-radius: 6px;
+  padding: 0.45rem 0.55rem;
+  margin-bottom: 0.5rem;
+  color: #f8fafc;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.real-battery-unit:last-child {
+  margin-bottom: 0;
+}
+
+.battery-rack-ear {
+  width: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 3px;
+  padding: 3px 1px;
+  flex-shrink: 0;
+}
+
+.rack-screw-hole {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 1px solid #64748b;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.8);
+}
+
+.rack-handle {
+  width: 4px;
+  height: 18px;
+  border-radius: 2px;
+  background: #94a3b8;
+  box-shadow: 1px 0 2px rgba(0,0,0,0.5);
+}
+
+.battery-terminal-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.terminal-post {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.terminal-stud {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.72rem;
+  color: #ffffff;
+  border: 2px solid #f8fafc;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.4);
+}
+
+.terminal-stud.pos {
+  background: radial-gradient(circle at 35% 35%, #ef4444, #991b1b);
+}
+
+.terminal-stud.neg {
+  background: radial-gradient(circle at 35% 35%, #475569, #0f172a);
+}
+
+.terminal-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.terminal-label.pos { color: #f87171; }
+.terminal-label.neg { color: #cbd5e1; }
+
+.battery-bms-display {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.battery-soc-meter {
+  display: inline-flex;
+  gap: 3px;
+  background: #0f172a;
+  padding: 2px 4px;
+  border-radius: 3px;
+  border: 1px solid #334155;
+  vertical-align: middle;
+}
+
+.soc-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 4px #22c55e;
+}
+
+.soc-dot.run {
+  background: #38bdf8;
+  box-shadow: 0 0 4px #38bdf8;
+}
+
 .busbar-strip {
   height: 6px;
   border-radius: 3px;
