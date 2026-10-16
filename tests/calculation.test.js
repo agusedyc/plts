@@ -418,6 +418,25 @@ test('calculateSystemBOM sums all components and computes ROI/BEP against monthl
   assert.equal(bom.bepYears, 13.6);
 });
 
+test('calculateSystemBOM handles 0 panel / 0 savings in pure UPS backup mode', () => {
+  const bom = calculateSystemBOM({
+    panelCost: 0,
+    bracketCost: 0,
+    inverterCost: 8800000,
+    batteryCost: 23800000,
+    bosCost: 2500000,
+    installationCost: 1000000,
+    monthlyPlnSavings: 0,
+  });
+
+  assert.equal(bom.grandTotal, 36100000);
+  assert.equal(bom.panelCost, 0);
+  assert.equal(bom.bracketCost, 0);
+  assert.equal(bom.monthlySavings, 0);
+  assert.equal(bom.bepMonths, 0);
+  assert.equal(bom.bepYears, 0);
+});
+
 test('calculateBatteryRuntime simulates backup duration with custom battery capacity', () => {
   // 200Ah at 48V, load 1040W, DoD 80%, inv eff 90%
   // usableWh = 200 * 48 * 0.8 * 0.9 = 6912 Wh

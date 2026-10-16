@@ -612,8 +612,8 @@
                 <div class="mt-2 pt-2 border-top">
                   <div class="d-flex justify-content-between align-items-center mb-1">
                     <span class="fw-semibold text-dark" style="font-size: 0.76rem;">☀️ Pasang Bertahap / Sebagian:</span>
-                    <span class="badge" :class="partialPvDetails.coveragePercent >= 100 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'"
-                          x-text="partialPvDetails.coveragePercent + '% Beban Terpenuhi'"></span>
+                    <span class="badge" :class="partialPvDetails.actualPanelCount === 0 ? 'bg-secondary-subtle text-secondary border border-secondary-subtle' : (partialPvDetails.coveragePercent >= 100 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle')"
+                          x-text="partialPvDetails.actualPanelCount === 0 ? '0% (Mode UPS / Charger PLN)' : (partialPvDetails.coveragePercent + '% Beban Terpenuhi')"></span>
                   </div>
                   <div class="row g-1 align-items-center mb-1">
                     <div class="col-7">
@@ -621,26 +621,48 @@
                     </div>
                     <div class="col-5">
                       <div class="input-group input-group-sm">
-                        <input type="number" min="1" max="100" class="form-control form-control-sm text-center"
+                        <input type="number" min="0" max="100" class="form-control form-control-sm text-center"
                                id="inputCustomPanelCount" x-model.number="inputs.customPanelCount"
                                :placeholder="results?.panelCount || 4">
                         <span class="input-group-text py-0 px-1" style="font-size: 0.7rem;">Lbr</span>
                       </div>
                     </div>
                   </div>
+                  <div class="d-flex justify-content-end mb-1 gap-2">
+                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" style="font-size: 0.68rem;"
+                            @click="inputs.customPanelCount = 0" x-show="inputs.customPanelCount !== 0">
+                      ⏩ Set 0 (Tahap 1: UPS Dulu)
+                    </button>
+                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-secondary" style="font-size: 0.68rem;"
+                            @click="inputs.customPanelCount = null" x-show="inputs.customPanelCount !== null && inputs.customPanelCount !== undefined">
+                      ↺ Reset (<span x-text="results?.panelCount || 0"></span> lbr)
+                    </button>
+                  </div>
                   <div class="text-muted" style="font-size: 0.72rem;">
-                    Daya Riil: <strong class="text-dark" x-text="partialPvDetails.actualInstalledWp + ' Wp'"></strong> ·
-                    Produksi: <strong class="text-success" x-text="partialPvDetails.actualDailyKwh + ' kWh/hari'"></strong>
-                    <template x-if="partialPvDetails.coveragePercent < 100">
-                      <span class="text-danger">(Defisit <span x-text="partialPvDetails.deficitKwh"></span> kWh)</span>
+                    <template x-if="partialPvDetails.actualPanelCount > 0">
+                      <div>
+                        Daya Riil: <strong class="text-dark" x-text="partialPvDetails.actualInstalledWp + ' Wp'"></strong> ·
+                        Produksi: <strong class="text-success" x-text="partialPvDetails.actualDailyKwh + ' kWh/hari'"></strong>
+                        <template x-if="partialPvDetails.coveragePercent < 100">
+                          <span class="text-danger">(Defisit <span x-text="partialPvDetails.deficitKwh"></span> kWh)</span>
+                        </template>
+                      </div>
+                    </template>
+                    <template x-if="partialPvDetails.actualPanelCount === 0">
+                      <div class="text-primary-emphasis bg-primary-subtle p-1 rounded border border-primary-subtle">
+                        ⚡ <strong>Tahap 1 (Mode UPS):</strong> Belum pasang panel surya. Baterai berfungsi sebagai cadangan pemadaman dan diisi penuh via Grid PLN.
+                      </div>
                     </template>
                   </div>
                   <div class="mt-1 d-flex justify-content-between align-items-center" style="font-size: 0.71rem;">
                     <span class="text-muted">Vmp String: <strong class="text-dark" x-text="partialPvDetails.estimatedStringVoltage + ' V'"></strong></span>
-                    <template x-if="partialPvDetails.isMpptVoltageMet">
+                    <template x-if="partialPvDetails.actualPanelCount === 0">
+                      <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 0.68rem;">⚪ Belum Ada Panel (Mode UPS)</span>
+                    </template>
+                    <template x-if="partialPvDetails.actualPanelCount > 0 && partialPvDetails.isMpptVoltageMet">
                       <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.68rem;">✓ MPPT Aman (≥ <span x-text="partialPvDetails.mpptMinVoltage"></span>V)</span>
                     </template>
-                    <template x-if="!partialPvDetails.isMpptVoltageMet">
+                    <template x-if="partialPvDetails.actualPanelCount > 0 && !partialPvDetails.isMpptVoltageMet">
                       <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.68rem;">✕ Tegangan Kurang (Min. <span x-text="results?.minPanelsForMppt || 2"></span> seri)</span>
                     </template>
                   </div>
@@ -1032,25 +1054,44 @@
                       <span>📈</span> Analisis Balik Modal (ROI / BEP)
                     </h3>
                     
-                    <div class="p-2 bg-white rounded border mb-2 small">
-                      <div class="text-muted" style="font-size: 0.72rem;">Penghematan Listrik PLN:</div>
-                      <div class="fw-bold text-primary fs-6" x-text="formatRupiah(systemBOM.monthlySavings) + ' / bulan'"></div>
-                      <div class="text-muted mt-1" style="font-size: 0.68rem;">
-                        (Produksi harian <span x-text="results?.energyKwh || 5.1"></span> kWh &times; tarif PLN + PPN + PPJ)
-                      </div>
-                    </div>
+                    <template x-if="systemBOM.monthlySavings > 0">
+                      <div>
+                        <div class="p-2 bg-white rounded border mb-2 small">
+                          <div class="text-muted" style="font-size: 0.72rem;">Penghematan Listrik PLN:</div>
+                          <div class="fw-bold text-primary fs-6" x-text="formatRupiah(systemBOM.monthlySavings) + ' / bulan'"></div>
+                          <div class="text-muted mt-1" style="font-size: 0.68rem;">
+                            (Produksi harian <span x-text="inputs.useCustomBomQuantities ? partialPvDetails.actualDailyKwh : (results?.energyKwh || 5.1)"></span> kWh &times; tarif PLN + PPN + PPJ)
+                          </div>
+                        </div>
 
-                    <div class="p-3 bg-success-subtle rounded border border-success-subtle mb-2 text-center">
-                      <div class="text-success-emphasis small fw-semibold">Estimasi Waktu Balik Modal (BEP):</div>
-                      <div class="display-6 fw-bold text-success my-1">
-                        &plusmn; <span x-text="systemBOM.bepYears"></span> <span class="fs-5">Tahun</span>
-                      </div>
-                      <div class="badge bg-success text-white" x-text="'&plusmn; ' + Math.round(systemBOM.bepMonths) + ' Bulan Penggunaan'"></div>
-                    </div>
+                        <div class="p-3 bg-success-subtle rounded border border-success-subtle mb-2 text-center">
+                          <div class="text-success-emphasis small fw-semibold">Estimasi Waktu Balik Modal (BEP):</div>
+                          <div class="display-6 fw-bold text-success my-1">
+                            &plusmn; <span x-text="systemBOM.bepYears"></span> <span class="fs-5">Tahun</span>
+                          </div>
+                          <div class="badge bg-success text-white" x-text="'&plusmn; ' + Math.round(systemBOM.bepMonths) + ' Bulan Penggunaan'"></div>
+                        </div>
 
-                    <p class="small text-muted mb-0" style="font-size: 0.73rem;">
-                      💡 <em>Setelah investasi impas (BEP), Anda menikmati listrik mandiri gratis dari panel surya selama masa pakai (25+ tahun).</em>
-                    </p>
+                        <p class="small text-muted mb-0" style="font-size: 0.73rem;">
+                          💡 <em>Setelah investasi impas (BEP), Anda menikmati listrik mandiri gratis dari panel surya selama masa pakai (25+ tahun).</em>
+                        </p>
+                      </div>
+                    </template>
+
+                    <template x-if="systemBOM.monthlySavings <= 0">
+                      <div>
+                        <div class="p-3 bg-white rounded border mb-2 text-center">
+                          <div class="badge bg-secondary-subtle text-secondary border border-secondary-subtle mb-2">Mode Backup / UPS PLN (0 Panel)</div>
+                          <div class="fw-bold text-dark fs-6 mb-1">Fase 1: UPS Cadangan Darurat</div>
+                          <p class="small text-muted mb-0" style="font-size: 0.73rem;">
+                            Sistem berfungsi menyimpan daya dari grid PLN untuk cadangan saat pemadaman. Belum ada penghematan tagihan bulanan karena panel surya belum dipasang.
+                          </p>
+                        </div>
+                        <div class="p-2 bg-light rounded border text-muted small" style="font-size: 0.72rem;">
+                          ℹ️ <em>Saat dana siap, tambahkan panel surya (Fase 2) untuk mulai memproduksi listrik mandiri gratis dan menghemat tagihan PLN.</em>
+                        </div>
+                      </div>
+                    </template>
                   </div>
 
                   <!-- Accordion Sesuaikan Biaya BOS / Jasa / Bracket Kustom -->

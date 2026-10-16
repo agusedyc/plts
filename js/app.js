@@ -374,8 +374,14 @@ export function pltsApp() {
     },
 
     get effectivePanelCount() {
-      if (this.inputs.customPanelCount !== null && this.inputs.customPanelCount !== undefined && Number(this.inputs.customPanelCount) > 0) {
-        return Number(this.inputs.customPanelCount);
+      if (
+        this.inputs.customPanelCount !== null &&
+        this.inputs.customPanelCount !== undefined &&
+        this.inputs.customPanelCount !== '' &&
+        !isNaN(Number(this.inputs.customPanelCount)) &&
+        Number(this.inputs.customPanelCount) >= 0
+      ) {
+        return Math.max(0, Math.floor(Number(this.inputs.customPanelCount)));
       }
       return Number(this.results?.panelCount) || 0;
     },
@@ -414,6 +420,11 @@ export function pltsApp() {
     },
 
     get systemBOM() {
+      let monthlySavings = this.results?.electricityCost?.totalCostMonthly || 0;
+      if (this.inputs.useCustomBomQuantities) {
+        const fullPanelCount = Number(this.results?.panelCount) || 1;
+        monthlySavings = Math.round(monthlySavings * (this.effectivePanelCount / fullPanelCount));
+      }
       return calculateSystemBOM({
         panelCost: this.totalPanelEstimatedCost,
         bracketCost: this.bracketDetails.totalCost,
@@ -421,7 +432,7 @@ export function pltsApp() {
         batteryCost: this.totalBatteryEstimatedCost,
         bosCost: this.inputs?.bosCost ?? 2500000,
         installationCost: this.inputs?.installationCost ?? 0,
-        monthlyPlnSavings: this.results?.electricityCost?.totalCostMonthly || 0,
+        monthlyPlnSavings: monthlySavings,
       });
     },
 
