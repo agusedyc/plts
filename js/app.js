@@ -11,6 +11,9 @@ import {
   calculateElectricityCost,
   calculateBracketCost,
   calculateSystemBOM,
+  calculateBatteryRuntime,
+  calculatePlnCharging,
+  calculatePartialPvProduction,
 } from './calculation.js';
 import { validateInput } from './validation.js';
 import { createStorage, getDefaultAdapter } from './storage.js';
@@ -63,6 +66,10 @@ export function pltsApp() {
       customBracketCostPerPanel: null,
       bosCost: 2500000,
       installationCost: 0,
+      customBatteryModuleCount: null,
+      plnChargingAmps: 30,
+      customPanelCount: null,
+      useCustomBomQuantities: false,
     },
     errors: {},
     warnings: {},
@@ -332,20 +339,75 @@ export function pltsApp() {
       return b ? b.name : ((this.inputs.moduleAh || 200) + ' Ah');
     },
 
+    get effectiveBatteryModules() {
+      if (this.inputs.customBatteryModuleCount !== null && this.inputs.customBatteryModuleCount !== undefined && Number(this.inputs.customBatteryModuleCount) > 0) {
+        return Number(this.inputs.customBatteryModuleCount);
+      }
+      return Number(this.results?.batteryModules) || 1;
+    },
+
+    get effectiveBatteryAh() {
+      const moduleAh = Number(this.inputs.moduleAh) || 200;
+      return this.effectiveBatteryModules * moduleAh;
+    },
+
+    get batteryRuntimeSimulation() {
+      const loadWatts = (this.results?.energyWh || 5100) / 24;
+      return calculateBatteryRuntime({
+        actualBatteryAh: this.effectiveBatteryAh,
+        systemVoltage: this.inputs.systemVoltage || 48,
+        dod: (this.inputs.dod || 80) / 100,
+        loadWatts,
+        inverterEfficiency: 0.9,
+      });
+    },
+
+    get plnChargingDetails() {
+      return calculatePlnCharging({
+        batteryAh: this.effectiveBatteryAh,
+        systemVoltage: this.inputs.systemVoltage || 48,
+        chargingCurrentAmps: this.inputs.plnChargingAmps || 30,
+        dod: (this.inputs.dod || 80) / 100,
+        plnVa: this.inputs.powerVa || 2200,
+        chargerEfficiency: 0.88,
+      });
+    },
+
+    get effectivePanelCount() {
+      if (this.inputs.customPanelCount !== null && this.inputs.customPanelCount !== undefined && Number(this.inputs.customPanelCount) > 0) {
+        return Number(this.inputs.customPanelCount);
+      }
+      return Number(this.results?.panelCount) || 0;
+    },
+
+    get partialPvDetails() {
+      return calculatePartialPvProduction({
+        actualPanelCount: this.effectivePanelCount,
+        wpPerPanel: this.inputs.wpPerPanel || 550,
+        targetEnergyWh: this.results?.energyWh || 5100,
+        sph: this.inputs.sph || 4,
+        lossFactor: 1.3,
+        panelVmp: this.inputs.panelVmp || 42.1,
+        mpptMinVoltage: this.inputs.mpptMinVoltage || 60,
+      });
+    },
+
     get totalBatteryEstimatedCost() {
       const price = this.selectedBatteryObj?.priceIdr || 0;
-      const count = Number(this.results?.batteryModules) || 1;
+      const count = this.inputs.useCustomBomQuantities ? this.effectiveBatteryModules : (Number(this.results?.batteryModules) || 1);
       return count * price;
     },
 
     get totalPanelEstimatedCost() {
       const price = this.selectedPanelObj?.priceIdr || 0;
-      return (Number(this.results?.panelCount) || 0) * price;
+      const count = this.inputs.useCustomBomQuantities ? this.effectivePanelCount : (Number(this.results?.panelCount) || 0);
+      return count * price;
     },
 
     get bracketDetails() {
+      const count = this.inputs.useCustomBomQuantities ? this.effectivePanelCount : (this.results?.panelCount || 0);
       return calculateBracketCost(
-        this.results?.panelCount || 0,
+        count,
         this.inputs?.wpPerPanel || 550,
         this.inputs?.customBracketCostPerPanel
       );
