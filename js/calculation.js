@@ -350,6 +350,76 @@ export function calculateElectricityCost(kwh, options = {}) {
   };
 }
 
+export function calculateBracketCost(panelCount, wpPerPanel = DEFAULT_WP_PER_PANEL, customUnitCost = null) {
+  const count = Math.max(0, Number(panelCount) || 0);
+  const wp = Number(wpPerPanel) || DEFAULT_WP_PER_PANEL;
+
+  let unitCost;
+  let sizeCategory;
+  if (customUnitCost !== null && customUnitCost !== undefined && Number(customUnitCost) >= 0) {
+    unitCost = Number(customUnitCost);
+    sizeCategory = 'Kustom';
+  } else if (wp < 400) {
+    unitCost = 150000;
+    sizeCategory = 'Kecil/Sedang (<400 Wp)';
+  } else if (wp < 600) {
+    unitCost = 220000;
+    sizeCategory = 'Standar (400–590 Wp)';
+  } else {
+    unitCost = 275000;
+    sizeCategory = 'Jumbo (≥600 Wp)';
+  }
+
+  const totalCost = count * unitCost;
+  return {
+    panelCount: count,
+    wpPerPanel: wp,
+    unitCost,
+    totalCost,
+    sizeCategory,
+  };
+}
+
+export function calculateSystemBOM({
+  panelCost = 0,
+  bracketCost = 0,
+  inverterCost = 0,
+  batteryCost = 0,
+  bosCost = 2500000,
+  installationCost = 0,
+  monthlyPlnSavings = 0,
+} = {}) {
+  const p = Math.max(0, Number(panelCost) || 0);
+  const br = Math.max(0, Number(bracketCost) || 0);
+  const inv = Math.max(0, Number(inverterCost) || 0);
+  const bat = Math.max(0, Number(batteryCost) || 0);
+  const bos = Math.max(0, Number(bosCost) || 0);
+  const inst = Math.max(0, Number(installationCost) || 0);
+
+  const grandTotal = p + br + inv + bat + bos + inst;
+
+  const monthlySavings = Math.max(0, Number(monthlyPlnSavings) || 0);
+  let bepMonths = 0;
+  let bepYears = 0;
+  if (monthlySavings > 0 && grandTotal > 0) {
+    bepMonths = Math.round((grandTotal / monthlySavings) * 10) / 10;
+    bepYears = Math.round((bepMonths / 12) * 10) / 10;
+  }
+
+  return {
+    panelCost: p,
+    bracketCost: br,
+    inverterCost: inv,
+    batteryCost: bat,
+    bosCost: bos,
+    installationCost: inst,
+    grandTotal,
+    monthlySavings,
+    bepMonths,
+    bepYears,
+  };
+}
+
 export function calculateSizing({
   powerVa,
   peakPower,

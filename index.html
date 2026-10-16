@@ -548,6 +548,12 @@
                     <strong x-text="formatRupiah(totalPanelEstimatedCost)"></strong>
                   </div>
                 </template>
+                <template x-if="bracketDetails?.totalCost > 0">
+                  <div class="mt-1 d-flex justify-content-between align-items-center text-muted" style="font-size: 0.74rem;">
+                    <span>🔧 Est. Bracket Rel (<span x-text="bracketDetails.sizeCategory"></span>):</span>
+                    <strong class="text-dark" x-text="formatRupiah(bracketDetails.totalCost)"></strong>
+                  </div>
+                </template>
               </div>
 
               <!-- Spesifikasi Teknis Per Modul Panel -->
@@ -780,6 +786,193 @@
           </div>
         </div>
 
+      </div>
+    </section>
+
+    <!-- ===== TOTAL ESTIMASI BIAYA & INVESTASI PLTS (BOM) ===== -->
+    <section id="biaya-sistem" x-show="hasResults" x-cloak class="mb-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-success fs-6 fw-bold">💰 RAB / BOM</span>
+            <h2 class="h5 mb-0 fw-bold">Rincian & Total Estimasi Biaya Investasi PLTS</h2>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-dark px-2 py-1" style="font-size: 0.85rem;">
+              Total Investasi: <strong class="text-success" x-text="formatRupiah(systemBOM.grandTotal)"></strong>
+            </span>
+          </div>
+        </div>
+
+        <div class="card-body p-3 p-md-4">
+          <div class="row g-3">
+            
+            <!-- Tabel Rincian Biaya Perangkat (BOM) -->
+            <div class="col-lg-8">
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0" style="font-size: 0.85rem;">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 35%;">Komponen Sistem</th>
+                      <th style="width: 20%;" class="text-center">Jumlah / Spesifikasi</th>
+                      <th style="width: 20%;" class="text-end">Harga Satuan</th>
+                      <th style="width: 25%;" class="text-end">Total Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- 1. Panel Surya -->
+                    <tr>
+                      <td>
+                        <span class="fw-semibold text-dark">☀️ Panel Surya PV</span>
+                        <div class="small text-muted" x-text="selectedPanelName"></div>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-light text-dark border" x-text="(results?.panelCount || 0) + ' Lembar'"></span>
+                      </td>
+                      <td class="text-end text-muted" x-text="formatRupiah(selectedPanelObj?.priceIdr || 0)"></td>
+                      <td class="text-end fw-bold text-dark" x-text="formatRupiah(systemBOM.panelCost)"></td>
+                    </tr>
+
+                    <!-- 2. Bracket & Mounting Rail -->
+                    <tr>
+                      <td>
+                        <span class="fw-semibold text-dark">🔧 Bracket & Rel Aluminium</span>
+                        <div class="small text-muted" x-text="'Rel AL6005, L-feet/roof clamp, mid/end clamp, baut SUS304 (' + bracketDetails.sizeCategory + ')'"></div>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-light text-dark border" x-text="(results?.panelCount || 0) + ' Set'"></span>
+                      </td>
+                      <td class="text-end text-muted" x-text="formatRupiah(bracketDetails.unitCost)"></td>
+                      <td class="text-end fw-bold text-dark" x-text="formatRupiah(systemBOM.bracketCost)"></td>
+                    </tr>
+
+                    <!-- 3. Inverter -->
+                    <tr>
+                      <td>
+                        <span class="fw-semibold text-dark">⚡ Inverter Off-Grid / Hybrid</span>
+                        <div class="small text-muted" x-text="selectedInverterName"></div>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-light text-dark border">1 Unit</span>
+                      </td>
+                      <td class="text-end text-muted" x-text="formatRupiah(selectedInverterObj?.priceIdr || 0)"></td>
+                      <td class="text-end fw-bold text-dark" x-text="formatRupiah(systemBOM.inverterCost)"></td>
+                    </tr>
+
+                    <!-- 4. Bank Baterai -->
+                    <tr>
+                      <td>
+                        <span class="fw-semibold text-dark">🔋 Bank Baterai LiFePO4</span>
+                        <div class="small text-muted" x-text="selectedBatteryName"></div>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-light text-dark border" x-text="(results?.batteryModules || 1) + ' Modul'"></span>
+                      </td>
+                      <td class="text-end text-muted" x-text="formatRupiah(selectedBatteryObj?.priceIdr || 0)"></td>
+                      <td class="text-end fw-bold text-dark" x-text="formatRupiah(systemBOM.batteryCost)"></td>
+                    </tr>
+
+                    <!-- 5. Perangkat Proteksi & Kabel (BOS) -->
+                    <tr>
+                      <td>
+                        <span class="fw-semibold text-dark">🛡️ Balance of System (BOS)</span>
+                        <div class="small text-muted">Kabel solar 6mm², kabel baterai NYAF, MCB DC, MCB AC, DC SPD surge arrester, Box Panel</div>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-light text-dark border">1 Paket</span>
+                      </td>
+                      <td class="text-end text-muted" x-text="formatRupiah(inputs.bosCost)"></td>
+                      <td class="text-end fw-bold text-dark" x-text="formatRupiah(systemBOM.bosCost)"></td>
+                    </tr>
+
+                    <!-- 6. Jasa Pasang & Instalasi (Opsional) -->
+                    <tr x-show="(inputs.installationCost || 0) > 0">
+                      <td>
+                        <span class="fw-semibold text-dark">👷 Jasa Pemasangan & Komisioning</span>
+                        <div class="small text-muted">Instalasi mekanikal atap, elektrikal panel, dan pengetesan beban</div>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-light text-dark border">1 Paket</span>
+                      </td>
+                      <td class="text-end text-muted" x-text="formatRupiah(inputs.installationCost)"></td>
+                      <td class="text-end fw-bold text-dark" x-text="formatRupiah(systemBOM.installationCost)"></td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="table-light">
+                    <tr class="table-active">
+                      <th colspan="3" class="text-end fs-6 fw-bold">TOTAL ESTIMASI INVESTASI PLTS:</th>
+                      <th class="text-end fs-5 fw-bold text-success" x-text="formatRupiah(systemBOM.grandTotal)"></th>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Kartu Analisis Balik Modal (ROI & Payback Period) -->
+            <div class="col-lg-4">
+              <div class="card h-100 border bg-light shadow-none">
+                <div class="card-body d-flex flex-column justify-content-between p-3">
+                  <div>
+                    <h3 class="h6 fw-bold text-dark mb-2 d-flex align-items-center gap-1">
+                      <span>📈</span> Analisis Balik Modal (ROI / BEP)
+                    </h3>
+                    
+                    <div class="p-2 bg-white rounded border mb-2 small">
+                      <div class="text-muted" style="font-size: 0.72rem;">Penghematan Listrik PLN:</div>
+                      <div class="fw-bold text-primary fs-6" x-text="formatRupiah(systemBOM.monthlySavings) + ' / bulan'"></div>
+                      <div class="text-muted mt-1" style="font-size: 0.68rem;">
+                        (Produksi harian <span x-text="results?.energyKwh || 5.1"></span> kWh &times; tarif PLN + PPN + PPJ)
+                      </div>
+                    </div>
+
+                    <div class="p-3 bg-success-subtle rounded border border-success-subtle mb-2 text-center">
+                      <div class="text-success-emphasis small fw-semibold">Estimasi Waktu Balik Modal (BEP):</div>
+                      <div class="display-6 fw-bold text-success my-1">
+                        &plusmn; <span x-text="systemBOM.bepYears"></span> <span class="fs-5">Tahun</span>
+                      </div>
+                      <div class="badge bg-success text-white" x-text="'&plusmn; ' + Math.round(systemBOM.bepMonths) + ' Bulan Penggunaan'"></div>
+                    </div>
+
+                    <p class="small text-muted mb-0" style="font-size: 0.73rem;">
+                      💡 <em>Setelah investasi impas (BEP), Anda menikmati listrik mandiri gratis dari panel surya selama masa pakai (25+ tahun).</em>
+                    </p>
+                  </div>
+
+                  <!-- Accordion Sesuaikan Biaya BOS / Jasa / Bracket Kustom -->
+                  <div class="border-top pt-2 mt-2">
+                    <button class="btn btn-sm btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#customBomCollapse" aria-expanded="false">
+                      <span class="small fw-semibold">⚙️ Sesuaikan Biaya BOS & Jasa</span>
+                      <span class="badge bg-light text-dark border">Ubah</span>
+                    </button>
+                    <div class="collapse mt-2" id="customBomCollapse">
+                      <div class="card card-body bg-white p-2 small border">
+                        <div class="mb-2">
+                          <label class="form-label mb-0 fw-semibold" for="inputBosCost">Biaya BOS (Kabel, MCB, Box Panel)</label>
+                          <input type="number" min="0" step="100000" class="form-control form-control-sm"
+                                 id="inputBosCost" x-model.number="inputs.bosCost">
+                        </div>
+                        <div class="mb-2">
+                          <label class="form-label mb-0 fw-semibold" for="inputInstallCost">Biaya Jasa Pasang (Rp)</label>
+                          <input type="number" min="0" step="250000" class="form-control form-control-sm"
+                                 id="inputInstallCost" x-model.number="inputs.installationCost">
+                        </div>
+                        <div class="mb-0">
+                          <label class="form-label mb-0 fw-semibold" for="inputBracketCost">Biaya Bracket per Modul (Rp)</label>
+                          <input type="number" min="0" step="10000" class="form-control form-control-sm"
+                                 id="inputBracketCost" x-model.number="inputs.customBracketCostPerPanel"
+                                 :placeholder="'Default: ' + bracketDetails.unitCost">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
     </section>
 

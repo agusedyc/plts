@@ -9,6 +9,8 @@ import {
   DEFAULT_PPJ_PERCENT,
   DEFAULT_BILLING_DAYS,
   calculateElectricityCost,
+  calculateBracketCost,
+  calculateSystemBOM,
 } from './calculation.js';
 import { validateInput } from './validation.js';
 import { createStorage, getDefaultAdapter } from './storage.js';
@@ -58,6 +60,9 @@ export function pltsApp() {
       ppnPercent: DEFAULT_PPN_PERCENT,
       ppjPercent: DEFAULT_PPJ_PERCENT,
       billingDays: DEFAULT_BILLING_DAYS,
+      customBracketCostPerPanel: null,
+      bosCost: 2500000,
+      installationCost: 0,
     },
     errors: {},
     warnings: {},
@@ -336,6 +341,26 @@ export function pltsApp() {
     get totalPanelEstimatedCost() {
       const price = this.selectedPanelObj?.priceIdr || 0;
       return (Number(this.results?.panelCount) || 0) * price;
+    },
+
+    get bracketDetails() {
+      return calculateBracketCost(
+        this.results?.panelCount || 0,
+        this.inputs?.wpPerPanel || 550,
+        this.inputs?.customBracketCostPerPanel
+      );
+    },
+
+    get systemBOM() {
+      return calculateSystemBOM({
+        panelCost: this.totalPanelEstimatedCost,
+        bracketCost: this.bracketDetails.totalCost,
+        inverterCost: this.selectedInverterObj?.priceIdr || 0,
+        batteryCost: this.totalBatteryEstimatedCost,
+        bosCost: this.inputs?.bosCost ?? 2500000,
+        installationCost: this.inputs?.installationCost ?? 0,
+        monthlyPlnSavings: this.results?.electricityCost?.totalCostMonthly || 0,
+      });
     },
 
     onManualPanelSpecInput() {

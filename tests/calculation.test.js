@@ -18,6 +18,8 @@ import {
   calculateElectricityCost,
   plnMcbAmps,
   inverterAcMcbAmps,
+  calculateBracketCost,
+  calculateSystemBOM,
 } from '../js/calculation.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -366,4 +368,49 @@ test('inverterAcMcbAmps returns proper AC output MCB rating based on rated watts
   assert.equal(inverterAcMcbAmps(1000), 6);
   assert.equal(inverterAcMcbAmps(3000), 20); // 3000/220*1.25 = 17A -> 20A
   assert.equal(inverterAcMcbAmps(5000), 32); // 5000/220*1.25 = 28.4A -> 32A
+});
+
+test('calculateBracketCost calculates mounting rail cost based on panel count and physical size (Wp)', () => {
+  // Small panel (<400 Wp) -> 150.000 / panel
+  const small = calculateBracketCost(4, 300);
+  assert.equal(small.unitCost, 150000);
+  assert.equal(small.totalCost, 600000);
+  assert.equal(small.sizeCategory, 'Kecil/Sedang (<400 Wp)');
+
+  // Standard panel (400 - 590 Wp, e.g. 550Wp) -> 220.000 / panel
+  const std = calculateBracketCost(6, 550);
+  assert.equal(std.unitCost, 220000);
+  assert.equal(std.totalCost, 1320000);
+  assert.equal(std.sizeCategory, 'Standar (400–590 Wp)');
+
+  // Jumbo panel (>=600 Wp, e.g. 720Wp) -> 275.000 / panel
+  const jumbo = calculateBracketCost(4, 720);
+  assert.equal(jumbo.unitCost, 275000);
+  assert.equal(jumbo.totalCost, 1100000);
+  assert.equal(jumbo.sizeCategory, 'Jumbo (≥600 Wp)');
+
+  // Custom unit cost override
+  const custom = calculateBracketCost(5, 550, 180000);
+  assert.equal(custom.unitCost, 180000);
+  assert.equal(custom.totalCost, 900000);
+  assert.equal(custom.sizeCategory, 'Kustom');
+});
+
+test('calculateSystemBOM sums all components and computes ROI/BEP against monthly PLN savings', () => {
+  const bom = calculateSystemBOM({
+    panelCost: 6600000,
+    bracketCost: 880000,
+    inverterCost: 8800000,
+    batteryCost: 23800000,
+    bosCost: 2500000,
+    installationCost: 1500000,
+    monthlyPlnSavings: 270000,
+  });
+
+  // Grand total: 6.6M + 880k + 8.8M + 23.8M + 2.5M + 1.5M = 44.080.000
+  assert.equal(bom.grandTotal, 44080000);
+  // BEP months: 44080000 / 270000 = 163.259... -> 163.3
+  assert.equal(bom.bepMonths, 163.3);
+  // BEP years: 163.3 / 12 = 13.6
+  assert.equal(bom.bepYears, 13.6);
 });
