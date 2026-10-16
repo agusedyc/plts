@@ -629,6 +629,12 @@ export function calculateSizing({
     mpptCount: safeMpptCount,
   });
 
+  const rawTheoreticalPanels = calculatedPanelCount;
+  const physicalArrayPanels = stringConfig.series * stringConfig.parallel;
+  if (physicalArrayPanels > calculatedPanelCount) {
+    calculatedPanelCount = physicalArrayPanels;
+  }
+
   const wiring = wiringSizing({
     stringImp: safePanelImp,
     totalImp: stringConfig.totalImp,
@@ -662,6 +668,7 @@ export function calculateSizing({
     mpptCount: safeMpptCount,
     panelWpBase: Math.ceil(rawPanelBase),
     panelWp: Math.ceil(rawPanelTotal),
+    rawPanelCount: rawTheoreticalPanels,
     panelCount: calculatedPanelCount,
     panelTotalActualWp: calculatedPanelCount * safeWpPerPanel,
     wpPerPanel: safeWpPerPanel,

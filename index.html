@@ -589,6 +589,11 @@
               </div>
               <h3 class="h5 card-title mb-1">Kebutuhan Panel</h3>
               <p class="display-6 fw-bold text-success mb-1" x-text="(results?.panelCount || 0) + ' Lembar'"></p>
+              <template x-if="results?.rawPanelCount && results?.rawPanelCount < results?.panelCount">
+                <div class="text-muted small mb-1" style="font-size: 0.72rem;">
+                  ℹ️ Hitungan beban <strong class="text-dark" x-text="results.rawPanelCount + ' lbr'"></strong> &rarr; disesuaikan ke <strong class="text-success" x-text="results.panelCount + ' lbr'"></strong> agar seimbang dengan rangkaian <span class="badge bg-light text-primary border" x-text="(results.stringConfig?.series || 1) + 'S ' + (results.stringConfig?.parallel || 1) + 'P'"></span>
+                </div>
+              </template>
               <div class="badge bg-light text-success border mb-2 text-truncate d-inline-block mw-100 fw-semibold" x-text="selectedPanelName"></div>
               
               <div class="p-2 bg-light rounded border mb-2 small">

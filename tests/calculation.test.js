@@ -537,3 +537,24 @@ test('calculatePartialPvProduction calculates energy and MPPT status for phased/
   assert.equal(zero.coveragePercent, 0);
   assert.equal(zero.isMpptVoltageMet, false);
 });
+
+test('calculateSizing synchronizes panelCount with symmetrical stringConfig matrix', () => {
+  // If theoretical panelCount is 5 but 5S Voc (250.5V) exceeds MPPT max voltage (245V),
+  // stringConfig requires 3S 2P (6 panels). panelCount should sync to 6.
+  const r = calculateSizing({
+    energyWh: 8000,
+    sph: 4,
+    wpPerPanel: 550,
+    panelVoc: 50.1,
+    panelVmp: 42.1,
+    mpptMaxVoltage: 245,
+    mpptMinVoltage: 60,
+  });
+  // raw theoretical panel count: 8000 / 4 * 1.3 = 2600 Wp / 550 = 4.72 -> ceil is 5
+  assert.equal(r.rawPanelCount, 5);
+  // Physical balanced array count: 3S 2P = 6
+  assert.equal(r.panelCount, 6);
+  assert.equal(r.stringConfig.series, 3);
+  assert.equal(r.stringConfig.parallel, 2);
+  assert.equal(r.panelTotalActualWp, 6 * 550);
+});
