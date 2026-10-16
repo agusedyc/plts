@@ -10,7 +10,12 @@ test('data/panels.json contains valid specs for all requested panels', () => {
   assert.ok(fs.existsSync(jsonPath), 'data/panels.json must exist');
 
   const panels = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-  assert.equal(panels.length, 6);
+  assert.equal(panels.length, 8);
+
+  // Every panel must have priceIdr > 0
+  panels.forEach(p => {
+    assert.ok(Number(p.priceIdr) > 0, `Panel ${p.id} must have priceIdr`);
+  });
 
   const solana = panels.find(p => p.id === 'solana-550');
   assert.ok(solana);

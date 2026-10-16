@@ -10,11 +10,12 @@ test('data/inverters.json contains valid configurations for all popular inverter
   assert.ok(fs.existsSync(jsonPath), 'data/inverters.json must exist');
 
   const inverters = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-  assert.equal(inverters.length, 12);
+  assert.equal(inverters.length, 20);
 
-  // Every inverter must specify systemVoltage 12, 24, or 48
+  // Every inverter must specify systemVoltage 12, 24, or 48 and have priceIdr > 0
   inverters.forEach(inv => {
     assert.ok([12, 24, 48].includes(inv.systemVoltage), `Inverter ${inv.id} must have valid systemVoltage`);
+    assert.ok(Number(inv.priceIdr) > 0, `Inverter ${inv.id} must have priceIdr`);
   });
 
   const ils3800 = inverters.find(i => i.id === 'ils-3800');
@@ -54,6 +55,19 @@ test('data/inverters.json contains valid configurations for all popular inverter
   assert.equal(deye.mpptCount, 2);
   assert.equal(deye.mpptMinVoltage, 125);
   assert.equal(deye.mpptMaxVoltage, 500);
+
+  const zamdon = inverters.find(i => i.id === 'zamdon-5k5-48v');
+  assert.ok(zamdon);
+  assert.equal(zamdon.brand, 'Zamdon');
+  assert.equal(zamdon.ratedWatts, 5500);
+  assert.equal(zamdon.systemVoltage, 48);
+  assert.equal(zamdon.mpptMaxCurrent, 100);
+
+  const prime = inverters.find(i => i.id === 'prime-3k-24v');
+  assert.ok(prime);
+  assert.equal(prime.brand, 'Prime');
+  assert.equal(prime.ratedWatts, 3000);
+  assert.equal(prime.systemVoltage, 24);
 });
 
 test('Growatt HV selects 6S 1P for 6 panels, whereas SRNE LV selects 3S 2P', () => {
@@ -114,21 +128,28 @@ test('ILS3800 24V and ILS6300 48V findInverterById work as expected', () => {
 
 test('filterInvertersByVoltage correctly groups inverters by 12V, 24V, and 48V', () => {
   const inv12 = filterInvertersByVoltage(12);
-  assert.equal(inv12.length, 2);
+  assert.equal(inv12.length, 4);
   assert.ok(inv12.every(i => i.systemVoltage === 12));
   assert.ok(inv12.some(i => i.id === 'must-pv18-1k-12v'));
   assert.ok(inv12.some(i => i.id === 'powmr-1k5-12v'));
+  assert.ok(inv12.some(i => i.id === 'prime-1k2-12v'));
+  assert.ok(inv12.some(i => i.id === 'zamdon-1k2-12v'));
 
   const inv24 = filterInvertersByVoltage(24);
-  assert.equal(inv24.length, 3);
+  assert.equal(inv24.length, 6);
   assert.ok(inv24.every(i => i.systemVoltage === 24));
   assert.ok(inv24.some(i => i.id === 'ils-3800'));
   assert.ok(inv24.some(i => i.id === 'must-pv18-3k-24v'));
   assert.ok(inv24.some(i => i.id === 'growatt-spf3500es'));
+  assert.ok(inv24.some(i => i.id === 'prime-3k-24v'));
+  assert.ok(inv24.some(i => i.id === 'zamdon-3k2-24v'));
 
   const inv48 = filterInvertersByVoltage(48);
-  assert.equal(inv48.length, 7);
+  assert.equal(inv48.length, 10);
   assert.ok(inv48.every(i => i.systemVoltage === 48));
   assert.ok(inv48.some(i => i.id === 'srne-5k'));
   assert.ok(inv48.some(i => i.id === 'ils-6300'));
+  assert.ok(inv48.some(i => i.id === 'growatt-spf5000es'));
+  assert.ok(inv48.some(i => i.id === 'prime-5k-48v'));
+  assert.ok(inv48.some(i => i.id === 'zamdon-5k5-48v'));
 });

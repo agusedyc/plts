@@ -264,6 +264,21 @@ export function pltsApp() {
       return p ? p.name : ((this.inputs.wpPerPanel || 550) + ' Wp');
     },
 
+    get selectedPanelObj() {
+      if (this.inputs.selectedPanelId === 'custom') return null;
+      return findPanelById(this.inputs.selectedPanelId, this.panels);
+    },
+
+    get selectedInverterObj() {
+      if (this.inputs.selectedInverterId === 'custom') return null;
+      return findInverterById(this.inputs.selectedInverterId, this.inverters);
+    },
+
+    get totalPanelEstimatedCost() {
+      const price = this.selectedPanelObj?.priceIdr || 0;
+      return (Number(this.results?.panelCount) || 0) * price;
+    },
+
     onManualPanelSpecInput() {
       this.inputs.selectedPanelId = 'custom';
       this.hitung();

@@ -210,12 +210,13 @@
               </label>
               <select class="form-select" id="panelSelect" x-model="inputs.selectedPanelId" @change="onPanelSelect($event.target.value)">
                 <template x-for="p in panels" :key="p.id">
-                  <option :value="p.id" x-text="p.name + ' (' + p.wp + ' Wp)'"></option>
+                  <option :value="p.id" x-text="p.name + ' (' + p.wp + ' Wp) — ' + formatRupiah(p.priceIdr)"></option>
                 </template>
                 <option value="custom">Kustom / Input Manual...</option>
               </select>
               <div class="form-text text-muted" x-show="inputs.selectedPanelId !== 'custom'">
-                Spek: <strong class="text-dark" x-text="(inputs.wpPerPanel || 550) + ' Wp'"></strong> (Vmp: <span x-text="(inputs.panelVmp || 42.1) + 'V'"></span>, Imp: <span x-text="(inputs.panelImp || 13.06) + 'A'"></span>).
+                Spek: <strong class="text-dark" x-text="(inputs.wpPerPanel || 550) + ' Wp'"></strong> (Vmp: <span x-text="(inputs.panelVmp || 42.1) + 'V'"></span>, Imp: <span x-text="(inputs.panelImp || 13.06) + 'A'"></span>) ·
+                Harga pasar: <strong class="text-success" x-text="formatRupiah(selectedPanelObj?.priceIdr || 0) + ' / unit'"></strong>.
               </div>
               <div class="form-text text-primary" x-show="inputs.selectedPanelId === 'custom'">
                 Daya kustom: <strong x-text="(inputs.wpPerPanel || 550) + ' Wp'"></strong>.
@@ -271,12 +272,15 @@
                 </label>
                 <select class="form-select form-select-sm mb-1" id="inverterSelect" x-model="inputs.selectedInverterId" @change="onInverterSelect($event.target.value)">
                   <template x-for="inv in filteredInverters" :key="inv.id">
-                    <option :value="inv.id" x-text="inv.name"></option>
+                    <option :value="inv.id" x-text="inv.name + ' — ' + formatRupiah(inv.priceIdr)"></option>
                   </template>
                   <option value="custom">Kustom / Manual...</option>
                 </select>
                 <div class="text-muted small mb-2" style="font-size: 0.74rem;">
-                  Spek MPPT: <strong class="text-dark" x-text="(inputs.mpptMinVoltage || 60) + '-' + (inputs.mpptMaxVoltage || 245) + 'V · Maks ' + (inputs.mpptMaxCurrent || 100) + 'A (' + (inputs.mpptCount || 1) + ' MPPT)'"></strong>
+                  <div>Spek MPPT: <strong class="text-dark" x-text="(inputs.mpptMinVoltage || 60) + '-' + (inputs.mpptMaxVoltage || 245) + 'V · Maks ' + (inputs.mpptMaxCurrent || 100) + 'A (' + (inputs.mpptCount || 1) + ' MPPT)'"></strong></div>
+                  <div class="text-success fw-semibold mt-1" x-show="selectedInverterObj?.priceIdr">
+                    🏷️ Est. Harga Pasar: <span x-text="formatRupiah(selectedInverterObj?.priceIdr || 0)"></span>
+                  </div>
                 </div>
               </div>
 
@@ -480,6 +484,12 @@
                 <div class="mt-1 text-muted" style="font-size: 0.74rem;">
                   Min. Teknis MPPT Startup: <strong class="text-dark" x-text="(results?.minPanelsForMppt || 2) + ' modul seri'"></strong> <span class="tip-icon" tabindex="0" role="button" data-bs-toggle="tooltip" data-bs-title="Jumlah minimal panel dalam 1 string seri agar tegangan Vmp mencapai batas bawah startup MPPT inverter.">?</span>
                 </div>
+                <template x-if="totalPanelEstimatedCost > 0">
+                  <div class="mt-2 pt-1 border-top d-flex justify-content-between align-items-center text-success" style="font-size: 0.74rem;">
+                    <span>🏷️ Est. Total Biaya Panel:</span>
+                    <strong x-text="formatRupiah(totalPanelEstimatedCost)"></strong>
+                  </div>
+                </template>
               </div>
 
               <!-- Spesifikasi Teknis Per Modul Panel -->
@@ -496,7 +506,7 @@
                         <label class="form-label mb-0 fw-semibold" for="resPanelSelect">Pilih Tipe Panel</label>
                         <select class="form-select form-select-sm" id="resPanelSelect" x-model="inputs.selectedPanelId" @change="onPanelSelect($event.target.value)">
                           <template x-for="p in panels" :key="p.id">
-                            <option :value="p.id" x-text="p.name + ' (' + p.wp + ' Wp)'"></option>
+                            <option :value="p.id" x-text="p.name + ' (' + p.wp + ' Wp) — ' + formatRupiah(p.priceIdr)"></option>
                           </template>
                           <option value="custom">Kustom / Input Manual...</option>
                         </select>
@@ -748,6 +758,11 @@
                   Model: <strong class="text-dark" x-text="selectedPanelName"></strong><br>
                   Susunan: <strong class="text-primary" x-text="(results?.stringConfig?.series || 0) + ' Seri × ' + (results?.stringConfig?.parallel || 0) + ' Paralel'"></strong> 
                   (<span x-text="(results?.panelCount || 0) + ' lembar total'"></span>)
+                  <template x-if="selectedPanelObj?.priceIdr">
+                    <div class="text-success fw-semibold mt-1">
+                      🏷️ Est. Harga: <span x-text="formatRupiah(selectedPanelObj.priceIdr) + ' / unit (' + formatRupiah(totalPanelEstimatedCost) + ' total)'"></span>
+                    </div>
+                  </template>
                 </div>
 
                 <!-- Visual Panel Modules Per String -->
@@ -858,6 +873,13 @@
                 <h4 class="h5 fw-bold mb-1 text-white" x-text="selectedInverterName"></h4>
                 <div class="text-warning fw-semibold mb-2" style="font-size: 0.85rem;">
                   Inverter Off-Grid / Hybrid <span x-text="(results?.inverterRatedWatts || 5000) + ' Watt'"></span>
+                  <template x-if="selectedInverterObj?.priceIdr">
+                    <div class="mt-1">
+                      <span class="badge bg-success text-white px-2 py-1" style="font-size: 0.72rem;">
+                        Est. Harga: <span x-text="formatRupiah(selectedInverterObj.priceIdr)"></span>
+                      </span>
+                    </div>
+                  </template>
                 </div>
 
                 <div class="p-2 rounded bg-black bg-opacity-25 border border-secondary text-start mb-2 small" style="font-size: 0.72rem;">

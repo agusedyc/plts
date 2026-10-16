@@ -9,6 +9,7 @@
     "mpptMaxVoltage": 105,
     "mpptMaxCurrent": 55,
     "mpptCount": 1,
+    "priceIdr": 3350000,
     "description": "1kW Off-Grid 12V, MPPT 15-105VDC, Max PV 55A"
   },
   {
@@ -17,11 +18,38 @@
     "brand": "PowMr",
     "ratedWatts": 1500,
     "systemVoltage": 12,
-    "mpptMinVoltage": 30,
-    "mpptMaxVoltage": 160,
+    "mpptMinVoltage": 90,
+    "mpptMaxVoltage": 430,
     "mpptMaxCurrent": 80,
     "mpptCount": 1,
-    "description": "1.5kW Off-Grid 12V, MPPT 30-160VDC, Max PV 80A"
+    "priceIdr": 3250000,
+    "description": "1.5kW Off-Grid 12V, MPPT 90-430VDC (Voc 450V), Max PV 80A"
+  },
+  {
+    "id": "prime-1k2-12v",
+    "name": "Prime LF 1.2kW (12V Toroidal)",
+    "brand": "Prime",
+    "ratedWatts": 1200,
+    "systemVoltage": 12,
+    "mpptMinVoltage": 15,
+    "mpptMaxVoltage": 105,
+    "mpptMaxCurrent": 50,
+    "mpptCount": 1,
+    "priceIdr": 3850000,
+    "description": "1.2kW Off-Grid 12V Toroidal Low-Frequency, MPPT 15-105VDC, Max PV 50A"
+  },
+  {
+    "id": "zamdon-1k2-12v",
+    "name": "Zamdon ZDTID 1.2kW (12V Toroidal)",
+    "brand": "Zamdon",
+    "ratedWatts": 1200,
+    "systemVoltage": 12,
+    "mpptMinVoltage": 15,
+    "mpptMaxVoltage": 105,
+    "mpptMaxCurrent": 60,
+    "mpptCount": 1,
+    "priceIdr": 4200000,
+    "description": "1.2kW Off-Grid 12V Toroidal PSW, MPPT 15-105VDC, Max PV 60A"
   },
   {
     "id": "ils-3800",
@@ -33,6 +61,7 @@
     "mpptMaxVoltage": 245,
     "mpptMaxCurrent": 100,
     "mpptCount": 1,
+    "priceIdr": 8500000,
     "description": "3kW Off-Grid 24V Toroidal, MPPT 30-245VDC, Max PV 100A (2700W)"
   },
   {
@@ -45,7 +74,21 @@
     "mpptMaxVoltage": 145,
     "mpptMaxCurrent": 80,
     "mpptCount": 1,
+    "priceIdr": 5250000,
     "description": "3kW Off-Grid 24V, MPPT 30-145VDC, Max PV 80A"
+  },
+  {
+    "id": "growatt-spf3000tl-24",
+    "name": "Growatt SPF 3000TL HVM-24 (24V)",
+    "brand": "Growatt",
+    "ratedWatts": 3000,
+    "systemVoltage": 24,
+    "mpptMinVoltage": 30,
+    "mpptMaxVoltage": 80,
+    "mpptMaxCurrent": 50,
+    "mpptCount": 1,
+    "priceIdr": 6500000,
+    "description": "3kW Off-Grid 24V, MPPT 30-80VDC (Voc 102V), Max PV 50A"
   },
   {
     "id": "growatt-spf3500es",
@@ -53,11 +96,38 @@
     "brand": "Growatt",
     "ratedWatts": 3500,
     "systemVoltage": 24,
-    "mpptMinVoltage": 60,
-    "mpptMaxVoltage": 450,
+    "mpptMinVoltage": 120,
+    "mpptMaxVoltage": 430,
     "mpptMaxCurrent": 16,
     "mpptCount": 1,
-    "description": "3.5kW Off-Grid 24V, MPPT 60-450VDC, Max PV 16A"
+    "priceIdr": 9500000,
+    "description": "3.5kW Off-Grid 24V, MPPT 120-430VDC (Voc 450V), Max PV 16A"
+  },
+  {
+    "id": "prime-3k-24v",
+    "name": "Prime LF 3kW (24V Toroidal)",
+    "brand": "Prime",
+    "ratedWatts": 3000,
+    "systemVoltage": 24,
+    "mpptMinVoltage": 30,
+    "mpptMaxVoltage": 145,
+    "mpptMaxCurrent": 60,
+    "mpptCount": 1,
+    "priceIdr": 6750000,
+    "description": "3kW Off-Grid 24V Toroidal Low-Frequency, MPPT 30-145VDC, Max PV 60A"
+  },
+  {
+    "id": "zamdon-3k2-24v",
+    "name": "Zamdon ZDTID 3.2kW (24V Toroidal)",
+    "brand": "Zamdon",
+    "ratedWatts": 3200,
+    "systemVoltage": 24,
+    "mpptMinVoltage": 30,
+    "mpptMaxVoltage": 145,
+    "mpptMaxCurrent": 60,
+    "mpptCount": 1,
+    "priceIdr": 7200000,
+    "description": "3.2kW Off-Grid 24V Toroidal PSW, MPPT 30-145VDC, Max PV 60A"
   },
   {
     "id": "srne-5k",
@@ -69,6 +139,7 @@
     "mpptMaxVoltage": 245,
     "mpptMaxCurrent": 100,
     "mpptCount": 1,
+    "priceIdr": 8800000,
     "description": "5kW Off-Grid 48V, MPPT 60-245VDC, Max PV 100A"
   },
   {
@@ -81,6 +152,7 @@
     "mpptMaxVoltage": 245,
     "mpptMaxCurrent": 100,
     "mpptCount": 1,
+    "priceIdr": 10500000,
     "description": "5kW Off-Grid 48V Toroidal, MPPT 60-245VDC, Max PV 100A (5400W)"
   },
   {
@@ -93,7 +165,47 @@
     "mpptMaxVoltage": 450,
     "mpptMaxCurrent": 22,
     "mpptCount": 1,
-    "description": "5kW Off-Grid 48V, MPPT 120-450VDC, Max PV 22A"
+    "priceIdr": 9800000,
+    "description": "5kW Off-Grid 48V, MPPT 120-450VDC (Voc 450V), Max PV 22A"
+  },
+  {
+    "id": "growatt-spf6000es-plus",
+    "name": "Growatt SPF 6000 ES Plus (Dual MPPT)",
+    "brand": "Growatt",
+    "ratedWatts": 6000,
+    "systemVoltage": 48,
+    "mpptMinVoltage": 120,
+    "mpptMaxVoltage": 450,
+    "mpptMaxCurrent": 32,
+    "mpptCount": 2,
+    "priceIdr": 13900000,
+    "description": "6kW Off-Grid 48V, 2 MPPT (16A+16A), 120-450VDC, Max PV 8000W"
+  },
+  {
+    "id": "prime-5k-48v",
+    "name": "Prime LF 5kW (48V Toroidal)",
+    "brand": "Prime",
+    "ratedWatts": 5000,
+    "systemVoltage": 48,
+    "mpptMinVoltage": 60,
+    "mpptMaxVoltage": 145,
+    "mpptMaxCurrent": 100,
+    "mpptCount": 1,
+    "priceIdr": 10800000,
+    "description": "5kW Off-Grid 48V Toroidal Low-Frequency, MPPT 60-145VDC, Max PV 100A"
+  },
+  {
+    "id": "zamdon-5k5-48v",
+    "name": "Zamdon ZDTID 5.5kW (48V Toroidal)",
+    "brand": "Zamdon",
+    "ratedWatts": 5500,
+    "systemVoltage": 48,
+    "mpptMinVoltage": 60,
+    "mpptMaxVoltage": 145,
+    "mpptMaxCurrent": 100,
+    "mpptCount": 1,
+    "priceIdr": 12500000,
+    "description": "5.5kW Off-Grid 48V Toroidal Hybrid, MPPT 60-145VDC, Max PV 100A"
   },
   {
     "id": "deye-sun-5k",
@@ -105,6 +217,7 @@
     "mpptMaxVoltage": 500,
     "mpptMaxCurrent": 26,
     "mpptCount": 2,
+    "priceIdr": 17500000,
     "description": "5kW Hybrid/Off-Grid 48V, 2 MPPT (13A+13A), 125-500VDC"
   },
   {
@@ -117,6 +230,7 @@
     "mpptMaxVoltage": 500,
     "mpptMaxCurrent": 44,
     "mpptCount": 2,
+    "priceIdr": 24500000,
     "description": "8kW Hybrid/Off-Grid 48V, 2 MPPT (22A+22A), 150-500VDC"
   },
   {
@@ -129,6 +243,7 @@
     "mpptMaxVoltage": 145,
     "mpptMaxCurrent": 80,
     "mpptCount": 1,
+    "priceIdr": 6850000,
     "description": "5kW Off-Grid 48V, MPPT 60-145VDC, Max PV 80A"
   },
   {
@@ -141,6 +256,7 @@
     "mpptMaxVoltage": 450,
     "mpptMaxCurrent": 100,
     "mpptCount": 1,
+    "priceIdr": 5850000,
     "description": "5.5kW Off-Grid 48V, MPPT 120-450VDC, Max PV 100A"
   }
 ]
