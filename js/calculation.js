@@ -462,6 +462,55 @@ export function calculateBatteryRuntime({
   };
 }
 
+export function calculatePlnCharging({
+  batteryAh = 0,
+  systemVoltage = 48,
+  chargingCurrentAmps = 30,
+  dod = 0.8,
+  plnVa = 2200,
+  chargerEfficiency = 0.88,
+} = {}) {
+  const ah = Math.max(0, Number(batteryAh) || 0);
+  const volt = Math.max(1, Number(systemVoltage) || 48);
+  const amps = Math.max(0, Number(chargingCurrentAmps) || 0);
+  const d = Math.max(0, Math.min(1, Number(dod) || 0.8));
+  const va = Math.max(0, Number(plnVa) || 2200);
+  const eff = Math.max(0.1, Math.min(1, Number(chargerEfficiency) || 0.88));
+
+  const bulkVoltage = volt * 1.15;
+  const chargingWattsDc = Math.round(amps * bulkVoltage);
+  const plnDrawWatts = eff > 0 ? Math.round(chargingWattsDc / eff) : 0;
+
+  const rechargeAh = ah * d;
+  const rechargeWh = Math.round(rechargeAh * bulkVoltage);
+
+  let chargingHours = 0;
+  if (amps > 0 && rechargeAh > 0) {
+    chargingHours = Math.round(((rechargeAh / amps) * 1.1) * 10) / 10;
+  }
+
+  const plnCapacityWatts = Math.round(va * 0.8);
+  const mcbLoadPercent = plnCapacityWatts > 0 ? Math.round((plnDrawWatts / plnCapacityWatts) * 100) : 0;
+  const isMcbSafe = plnDrawWatts <= plnCapacityWatts;
+
+  let mcbWarningMessage = null;
+  if (!isMcbSafe && plnDrawWatts > 0) {
+    mcbWarningMessage = `Peringatan: Daya cas PLN (${plnDrawWatts} W) melebihi batas aman daya meteran PLN (${plnCapacityWatts} W). MCB berisiko trip.`;
+  }
+
+  return {
+    chargingCurrentAmps: amps,
+    chargingWattsDc,
+    plnDrawWatts,
+    rechargeWh,
+    chargingHours,
+    plnCapacityWatts,
+    isMcbSafe,
+    mcbLoadPercent,
+    mcbWarningMessage,
+  };
+}
+
 export function calculateSizing({
   powerVa,
   peakPower,

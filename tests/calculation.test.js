@@ -21,6 +21,7 @@ import {
   calculateBracketCost,
   calculateSystemBOM,
   calculateBatteryRuntime,
+  calculatePlnCharging,
 } from '../js/calculation.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -443,4 +444,49 @@ test('calculateBatteryRuntime simulates backup duration with custom battery capa
 
   const zeroLoad = calculateBatteryRuntime({ actualBatteryAh: 200, loadWatts: 0 });
   assert.equal(zeroLoad.runtimeHours, 0);
+});
+
+test('calculatePlnCharging calculates grid charging power, duration, and MCB safety', () => {
+  // 200Ah at 48V, 30A charging, 80% DoD, 2200 VA PLN (1760W limit)
+  // bulkVoltage = 48 * 1.15 = 55.2V
+  // chargingWattsDc = 30 * 55.2 = 1656 W
+  // plnDrawWatts = 1656 / 0.88 = 1882 W
+  // rechargeAh = 200 * 0.8 = 160 Ah
+  // chargingHours = (160 / 30) * 1.1 = 5.866... -> 5.9 jam
+  // plnCapacityWatts = 2200 * 0.8 = 1760 W
+  // 1882W > 1760W -> isMcbSafe = false
+  const res = calculatePlnCharging({
+    batteryAh: 200,
+    systemVoltage: 48,
+    chargingCurrentAmps: 30,
+    dod: 0.8,
+    plnVa: 2200,
+    chargerEfficiency: 0.88,
+  });
+
+  assert.equal(res.chargingCurrentAmps, 30);
+  assert.equal(res.chargingWattsDc, 1656);
+  assert.equal(res.plnDrawWatts, 1882);
+  assert.equal(res.chargingHours, 5.9);
+  assert.equal(res.isMcbSafe, false);
+  assert.ok(res.mcbWarningMessage);
+
+  // Safe case: 10A charging on 2200 VA (plnDraw = 627W < 1760W)
+  const safe = calculatePlnCharging({
+    batteryAh: 200,
+    systemVoltage: 48,
+    chargingCurrentAmps: 10,
+    dod: 0.8,
+    plnVa: 2200,
+  });
+  assert.equal(safe.isMcbSafe, true);
+  assert.equal(safe.mcbWarningMessage, null);
+  // chargingHours = (160 / 10) * 1.1 = 17.6 jam
+  assert.equal(safe.chargingHours, 17.6);
+
+  // Zero charging current edge case
+  const zero = calculatePlnCharging({ batteryAh: 200, chargingCurrentAmps: 0 });
+  assert.equal(zero.plnDrawWatts, 0);
+  assert.equal(zero.chargingHours, 0);
+  assert.equal(zero.isMcbSafe, true);
 });
