@@ -1,19 +1,79 @@
+export const MAX_HISTORY_ITEMS = 50;
+
+export function normalizeInputKey(input) {
+  if (!input || typeof input !== 'object') return '';
+  const sorted = {};
+  for (const k of Object.keys(input).sort()) {
+    sorted[k] = input[k];
+  }
+  return JSON.stringify(sorted);
+}
+
+let lastTimestampMs = 0;
+
+function generateMonotonicTimestamp() {
+  let now = Date.now();
+  if (now <= lastTimestampMs) {
+    now = lastTimestampMs + 1;
+  }
+  lastTimestampMs = now;
+  return new Date(now).toISOString();
+}
+
 export function createStorage(adapter) {
   return {
     async saveCalculation(entry) {
       const record = {
         id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
-        timestamp: new Date().toISOString(),
+        timestamp: entry.timestamp || generateMonotonicTimestamp(),
         ...entry,
       };
+
+      const newKey = normalizeInputKey(record.input);
+      const all = await adapter.getAll('history');
+      const list = Array.isArray(all) ? [...all] : [];
+
+      // Deduplicate: delete previous entries with identical input
+      const remaining = [];
+      for (const item of list) {
+        if (newKey && normalizeInputKey(item.input) === newKey) {
+          await adapter.delete('history', item.id);
+        } else {
+          remaining.push(item);
+        }
+      }
+
       await adapter.put('history', record);
+      remaining.unshift(record);
+
+      // Enforce max 50 items cap: auto delete oldest
+      remaining.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+      if (remaining.length > MAX_HISTORY_ITEMS) {
+        const excess = remaining.slice(MAX_HISTORY_ITEMS);
+        for (const item of excess) {
+          await adapter.delete('history', item.id);
+        }
+      }
+
       return record;
     },
 
     async getHistory() {
       const all = await adapter.getAll('history');
-      const list = Array.isArray(all) ? all : [];
-      return [...list].sort((a, b) => (b.timestamp < a.timestamp ? -1 : 1));
+      const list = Array.isArray(all) ? [...all] : [];
+      list.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+
+      // Guarantee deduplication & 50-item limit
+      const seen = new Set();
+      const deduped = [];
+      for (const item of list) {
+        const key = normalizeInputKey(item.input);
+        if (key && seen.has(key)) continue;
+        if (key) seen.add(key);
+        deduped.push(item);
+        if (deduped.length >= MAX_HISTORY_ITEMS) break;
+      }
+      return deduped;
     },
 
     async deleteHistory(id) {
