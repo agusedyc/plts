@@ -22,6 +22,7 @@ import {
   calculateSystemBOM,
   calculateBatteryRuntime,
   calculatePlnCharging,
+  calculatePartialPvProduction,
 } from '../js/calculation.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -489,4 +490,50 @@ test('calculatePlnCharging calculates grid charging power, duration, and MCB saf
   assert.equal(zero.plnDrawWatts, 0);
   assert.equal(zero.chargingHours, 0);
   assert.equal(zero.isMcbSafe, true);
+});
+
+test('calculatePartialPvProduction calculates energy and MPPT status for phased/staged panel array', () => {
+  // 4 panels of 550Wp, target 20000Wh, sph 4, loss 1.3, Vmp 42.1V, MPPT min 60V
+  // installedWp = 4 * 550 = 2200 Wp
+  // actualDailyWh = 2200 * 4 / 1.3 = 6769.23 -> 6769 Wh
+  // actualDailyKwh = 6.8 kWh
+  // coveragePercent = round(6769 / 20000 * 100) = 34%
+  // deficitKwh = round((20000 - 6769)/100)/10 = 13.2 kWh
+  // string voltage = 4 * 42.1 = 168.4V >= 60V -> isMpptVoltageMet = true
+  const res = calculatePartialPvProduction({
+    actualPanelCount: 4,
+    wpPerPanel: 550,
+    targetEnergyWh: 20000,
+    sph: 4,
+    lossFactor: 1.3,
+    panelVmp: 42.1,
+    mpptMinVoltage: 60,
+  });
+
+  assert.equal(res.actualPanelCount, 4);
+  assert.equal(res.actualInstalledWp, 2200);
+  assert.equal(res.actualDailyWh, 6769);
+  assert.equal(res.actualDailyKwh, 6.8);
+  assert.equal(res.coveragePercent, 34);
+  assert.equal(res.deficitKwh, 13.2);
+  assert.equal(res.isMpptVoltageMet, true);
+  assert.equal(res.estimatedStringVoltage, 168.4);
+
+  // Insufficient panels for high-voltage MPPT (e.g. 1 panel of 42.1V on 120V MPPT)
+  const underVolt = calculatePartialPvProduction({
+    actualPanelCount: 1,
+    wpPerPanel: 550,
+    targetEnergyWh: 20000,
+    panelVmp: 42.1,
+    mpptMinVoltage: 120,
+  });
+  assert.equal(underVolt.isMpptVoltageMet, false);
+  assert.equal(underVolt.estimatedStringVoltage, 42.1);
+
+  // Zero panel count
+  const zero = calculatePartialPvProduction({ actualPanelCount: 0, targetEnergyWh: 10000 });
+  assert.equal(zero.actualInstalledWp, 0);
+  assert.equal(zero.actualDailyKwh, 0);
+  assert.equal(zero.coveragePercent, 0);
+  assert.equal(zero.isMpptVoltageMet, false);
 });

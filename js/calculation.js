@@ -511,6 +511,46 @@ export function calculatePlnCharging({
   };
 }
 
+export function calculatePartialPvProduction({
+  actualPanelCount = 0,
+  wpPerPanel = DEFAULT_WP_PER_PANEL,
+  targetEnergyWh = 20000,
+  sph = 4,
+  lossFactor = DEFAULT_LOSS_FACTOR,
+  panelVmp = DEFAULT_PANEL_VMP,
+  mpptMinVoltage = DEFAULT_MPPT_MIN_VOLTAGE,
+} = {}) {
+  const count = Math.max(0, Number(actualPanelCount) || 0);
+  const wp = Math.max(0, Number(wpPerPanel) || DEFAULT_WP_PER_PANEL);
+  const targetWh = Math.max(0, Number(targetEnergyWh) || 0);
+  const sunHours = Math.max(0.1, Number(sph) || 4);
+  const loss = Math.max(1, Number(lossFactor) || DEFAULT_LOSS_FACTOR);
+  const vmp = Math.max(0, Number(panelVmp) || DEFAULT_PANEL_VMP);
+  const minMppt = Math.max(0, Number(mpptMinVoltage) || DEFAULT_MPPT_MIN_VOLTAGE);
+
+  const actualInstalledWp = count * wp;
+  const actualDailyWh = Math.round((actualInstalledWp * sunHours) / loss);
+  const actualDailyKwh = Math.round(actualDailyWh / 100) / 10;
+
+  const coveragePercent = targetWh > 0 ? Math.round((actualDailyWh / targetWh) * 100) : 0;
+  const deficitKwh = Math.max(0, Math.round((targetWh - actualDailyWh) / 100) / 10);
+
+  const estimatedStringVoltage = Math.round(count * vmp * 10) / 10;
+  const isMpptVoltageMet = count > 0 && estimatedStringVoltage >= minMppt;
+
+  return {
+    actualPanelCount: count,
+    actualInstalledWp,
+    actualDailyWh,
+    actualDailyKwh,
+    coveragePercent,
+    deficitKwh,
+    isMpptVoltageMet,
+    estimatedStringVoltage,
+    mpptMinVoltage: minMppt,
+  };
+}
+
 export function calculateSizing({
   powerVa,
   peakPower,
