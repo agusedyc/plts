@@ -679,9 +679,26 @@
               <h3 class="h5 card-title mb-1">Kabel & MCB DC</h3>
               <div class="p-2 bg-light rounded border mb-2 small">
                 <div class="fw-bold text-danger mb-1">Jalur Panel Surya (PV):</div>
-                <div>Arus Desain: <span x-text="(results?.wiring?.pv?.stringDesignCurrent || 0) + ' A'"></span></div>
-                <div>MCB DC: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringMcbAmps || 0) + ' Ampere'"></strong></div>
-                <div>Kabel Minimal: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringCableMm2 || 6) + ' mm² (Solar Cable)'"></strong></div>
+                <template x-if="(results?.stringConfig?.parallel || 1) > 1">
+                  <div class="mb-2">
+                    <div class="text-muted" style="font-size: 0.72rem;"><strong>1. Tiap String (masuk Combiner):</strong></div>
+                    <div>Arus Desain: <span x-text="(results?.wiring?.pv?.stringDesignCurrent || 0) + ' A'"></span></div>
+                    <div>Fuse/MCB DC: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringMcbAmps || 0) + ' Ampere'"></strong></div>
+                    <div>Kabel Minimal: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringCableMm2 || 6) + ' mm² (Solar Cable)'"></strong></div>
+                    
+                    <div class="text-muted mt-1" style="font-size: 0.72rem;"><strong>2. DC Utama (Combiner ke Inverter):</strong></div>
+                    <div>Arus Desain: <span x-text="(results?.wiring?.pv?.arrayDesignCurrent || 0) + ' A'"></span></div>
+                    <div>MCB DC Utama: <strong class="text-dark" x-text="(results?.wiring?.pv?.arrayMcbAmps || 0) + ' Ampere'"></strong></div>
+                    <div>Kabel Minimal: <strong class="text-dark" x-text="(results?.wiring?.pv?.arrayCableMm2 || 6) + ' mm² (Solar Cable)'"></strong></div>
+                  </div>
+                </template>
+                <template x-if="(results?.stringConfig?.parallel || 1) <= 1">
+                  <div>
+                    <div>Arus Desain: <span x-text="(results?.wiring?.pv?.stringDesignCurrent || 0) + ' A'"></span></div>
+                    <div>MCB DC: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringMcbAmps || 0) + ' Ampere'"></strong></div>
+                    <div>Kabel Minimal: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringCableMm2 || 6) + ' mm² (Solar Cable)'"></strong></div>
+                  </div>
+                </template>
                 
                 <hr class="my-1">
                 
@@ -739,7 +756,7 @@
                     <template x-for="p in stringParallelArray" :key="p">
                       <div class="pv-string-block mb-2">
                         <div class="pv-string-header">
-                          <span x-text="'String ' + p + ' (' + (results?.stringConfig?.series || 0) + 'S)'"></span>
+                          <span x-text="'String ' + p + ' (' + (results?.stringConfig?.series || 0) + ' Seri)'"></span>
                           <span class="text-primary" x-text="(results?.stringConfig?.totalVmp || 0) + 'V · ' + (inputs?.panelImp || 13) + 'A'"></span>
                         </div>
                         <div class="pv-panels-row">
@@ -754,9 +771,9 @@
                               <div class="pv-wire-arrow" x-show="s < (results?.stringConfig?.series || 0)">&rarr;</div>
                             </div>
                           </template>
-                          <div class="pv-combiner-box" x-show="(results?.stringConfig?.parallel || 1) > 1">
-                            <span style="font-size: 0.55rem; color: #64748b;">Combiner</span>
-                            <span class="text-primary fw-bold" style="font-size: 0.6rem;" x-text="(results?.stringConfig?.totalVmp || 0) + 'V'"></span>
+                          <div class="ms-auto ps-2 d-flex flex-column align-items-end text-muted" style="font-size: 0.6rem; white-space: nowrap;">
+                            <span class="badge bg-warning-subtle text-dark border border-warning" x-show="(results?.stringConfig?.parallel || 1) > 1">&rarr; ke Combiner</span>
+                            <span class="badge bg-secondary-subtle text-dark border" x-show="(results?.stringConfig?.parallel || 1) <= 1">&rarr; ke MCB DC</span>
                           </div>
                         </div>
                       </div>
@@ -764,9 +781,36 @@
                   </div>
                 </div>
 
+                <!-- UNIT COMBINER BOX TERPADU (JIKA PARALEL > 1) -->
+                <div x-show="(results?.stringConfig?.parallel || 1) > 1" class="combiner-box-block mb-2 p-2 bg-white rounded border border-warning shadow-sm">
+                  <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-light">
+                    <span class="fw-bold text-dark" style="font-size: 0.78rem;">🔀 PV Combiner Box (Penyatu Paralel)</span>
+                    <span class="badge bg-warning text-dark" style="font-size: 0.65rem;" x-text="(results?.stringConfig?.parallel || 2) + ' String In &rarr; 1 DC Out'"></span>
+                  </div>
+                  <div class="text-muted mb-2" style="font-size: 0.68rem;">
+                    Menyatukan <strong class="text-dark" x-text="(results?.stringConfig?.parallel || 2) + ' String'"></strong> paralel: Tegangan tetap <strong class="text-success" x-text="(results?.stringConfig?.totalVmp || 0) + ' V'"></strong>, Arus total dijumlahkan menjadi <strong class="text-primary" x-text="(results?.stringConfig?.totalImp || 0) + ' A'"></strong> (<span x-text="(results?.stringConfig?.parallel || 2) + ' × ' + (inputs?.panelImp || 13) + 'A'"></span>).
+                  </div>
+                  
+                  <div class="p-1 px-2 bg-light rounded border mb-2" style="font-size: 0.68rem;">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="text-muted">Proteksi Tiap String:</span>
+                      <span class="fw-semibold text-dark" x-text="'DC Fuse / MCB ' + (results?.wiring?.pv?.stringMcbAmps || 20) + 'A'"></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                      <span class="text-muted">Busbar Penggabung:</span>
+                      <span class="fw-semibold text-danger">Busbar Paralel DC (+) & (-)</span>
+                    </div>
+                  </div>
+
+                  <div class="d-flex justify-content-between align-items-center p-1 px-2 bg-warning bg-opacity-25 rounded border border-warning" style="font-size: 0.72rem;">
+                    <span class="fw-bold text-dark">Keluaran DC Utama:</span>
+                    <span class="text-primary fw-bold" x-text="(results?.stringConfig?.totalVmp || 0) + ' VDC · ' + (results?.stringConfig?.totalImp || 0) + ' A'"></span>
+                  </div>
+                </div>
+
                 <div class="p-1 px-2 bg-white rounded border small" style="font-size: 0.72rem;">
-                  <div><strong>Total Tegangan Vmp:</strong> <span class="text-success fw-bold" x-text="(results?.stringConfig?.totalVmp || 0) + ' VDC'"></span></div>
-                  <div><strong>Total Arus PV (Imp):</strong> <span class="text-primary fw-bold" x-text="(results?.stringConfig?.totalImp || 0) + ' A'"></span></div>
+                  <div><strong>Total Tegangan Vmp:</strong> <span class="text-success fw-bold" x-text="(results?.stringConfig?.totalVmp || 0) + ' VDC'"></span> <span class="text-muted" x-show="(results?.stringConfig?.parallel || 1) > 1">(Tegangan tetap)</span></div>
+                  <div><strong>Total Arus PV (Imp):</strong> <span class="text-primary fw-bold" x-text="(results?.stringConfig?.totalImp || 0) + ' A'"></span> <span class="text-muted" x-show="(results?.stringConfig?.parallel || 1) > 1">(Arus dijumlahkan)</span></div>
                 </div>
               </div>
 
@@ -774,14 +818,14 @@
               <div class="schematic-cable cable-pv">
                 <div class="w-100">
                   <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span>⚡ Jalur Kabel DC PV &rarr;</span>
+                    <span x-text="(results?.stringConfig?.parallel || 1) > 1 ? '⚡ Jalur DC Utama (Combiner &rarr; Inverter)' : '⚡ Jalur Kabel DC PV &rarr; Inverter'"></span>
                     <span class="mcb-tag text-warning border-warning">
-                      ⚡ MCB DC: <span x-text="(results?.wiring?.pv?.stringMcbAmps || 20) + 'A'"></span>
+                      ⚡ MCB DC: <span x-text="((results?.stringConfig?.parallel || 1) > 1 ? (results?.wiring?.pv?.arrayMcbAmps || 20) : (results?.wiring?.pv?.stringMcbAmps || 20)) + 'A'"></span>
                     </span>
                   </div>
                   <div class="d-flex justify-content-between text-muted" style="font-size: 0.68rem;">
-                    <span>Kabel Surya: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringCableMm2 || 6) + ' mm² (Solar Cable)'"></strong></span>
-                    <span>Arus Desain: <strong class="text-dark" x-text="(results?.wiring?.pv?.stringDesignCurrent || 0) + 'A'"></strong></span>
+                    <span>Kabel Surya: <strong class="text-dark" x-text="((results?.stringConfig?.parallel || 1) > 1 ? (results?.wiring?.pv?.arrayCableMm2 || 6) : (results?.wiring?.pv?.stringCableMm2 || 6)) + ' mm² (Solar Cable)'"></strong></span>
+                    <span>Arus Desain: <strong class="text-dark" x-text="((results?.stringConfig?.parallel || 1) > 1 ? (results?.wiring?.pv?.arrayDesignCurrent || 0) : (results?.wiring?.pv?.stringDesignCurrent || 0)) + 'A'"></strong></span>
                   </div>
                 </div>
               </div>

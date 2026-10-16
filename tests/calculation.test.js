@@ -118,6 +118,8 @@ test('wiringSizing calculates safe MCB and cable sizes', () => {
   });
   assert.equal(wiring.pv.stringMcbAmps, 20);
   assert.equal(wiring.pv.stringCableMm2, 6);
+  assert.equal(wiring.pv.arrayMcbAmps, 40);
+  assert.equal(wiring.pv.arrayCableMm2, 10);
   assert.equal(wiring.battery.mcbAmps, 125);
   assert.equal(wiring.battery.cableMm2, 25);
 });

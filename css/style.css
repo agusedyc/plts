@@ -124,6 +124,13 @@ body {
   margin-left: 4px;
 }
 
+.combiner-box-block {
+  background: #ffffff;
+  border: 1.5px solid #f59e0b;
+  border-radius: 6px;
+  position: relative;
+}
+
 /* Full System Schematic Diagram */
 .schematic-card {
   background: #ffffff;

@@ -260,6 +260,7 @@ export function wiringSizing({
 
   const pvArrayDesignCurrent = totalImp * sf;
   const arrayMcbAmps = pvStandardMcbRatings.find((r) => r >= pvArrayDesignCurrent) || Math.ceil(pvArrayDesignCurrent);
+  const arrayCableMm2 = arrayMcbAmps <= 32 ? 6 : (arrayMcbAmps <= 50 ? 10 : 16);
 
   const batteryCurrent = batteryPowerWatts / systemVoltage;
   const normalizedBatteryCurrent = Math.max(batteryCurrent, batteryCurrent > 70 ? 90 : batteryCurrent);
@@ -275,6 +276,7 @@ export function wiringSizing({
       stringCableMm2,
       arrayDesignCurrent: Math.round(pvArrayDesignCurrent * 10) / 10,
       arrayMcbAmps,
+      arrayCableMm2,
     },
     battery: {
       current: Math.round(batteryCurrent * 10) / 10,
